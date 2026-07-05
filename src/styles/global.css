@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  /* Palette Croc Cake — dérivée du logo officiel */
+  --color-rouge-50: #fdf2f2;
+  --color-rouge-100: #fbe3e3;
+  --color-rouge-200: #f8cccc;
+  --color-rouge-300: #f2a8a9;
+  --color-rouge-400: #e97577;
+  --color-rouge-500: #dc474b;
+  --color-rouge-600: #d2222a;
+  --color-rouge-700: #a91b21;
+  --color-rouge-800: #8c191e;
+  --color-rouge-900: #75191d;
+  --color-rouge-950: #3f0a0c;
+
+  --color-beige-50: #fdfaf5;
+  --color-beige-100: #f9f2e7;
+  --color-beige-200: #f3e6d0;
+  --color-beige-300: #ead3b0;
+  --color-beige-400: #ddb989;
+  --color-beige-500: #d0a066;
+  --color-beige-600: #c28a4e;
+  --color-beige-700: #a17141;
+  --color-beige-800: #825c39;
+  --color-beige-900: #6a4c31;
+
+  --color-brun-50: #faf6f2;
+  --color-brun-100: #f0e6dc;
+  --color-brun-200: #e0ccb8;
+  --color-brun-300: #ccab8d;
+  --color-brun-400: #b78a64;
+  --color-brun-500: #a87249;
+  --color-brun-600: #935c3a;
+  --color-brun-700: #7a4830;
+  --color-brun-800: #653c2b;
+  --color-brun-900: #5f3a21;
+  --color-brun-950: #2f1b10;
+
+  --color-charbon: #3b3536;
+
+  --font-display: "Baloo 2 Variable", "Baloo 2", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Nunito Sans Variable", "Nunito Sans", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-charbon);
+  background-color: var(--color-beige-50);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+/* Lien "skip" pour l'accessibilité */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-rouge-600);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 0.5rem 0;
+}
+.skip-link:focus {
+  left: 0;
+}

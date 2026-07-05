@@ -1,0 +1,105 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Base from '../../layouts/Base.astro';
+import { SITE } from '../../data/site';
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const modules = import.meta.glob<{ default: ImageMetadata }>(
+    '../../assets/photos/*.{jpg,JPG,jpeg,png}',
+    { eager: true }
+  );
+  const photos = Object.entries(modules)
+    .filter(([path]) => {
+      const f = path.split('/').pop()!;
+      return !f.startsWith('IMG_20250227') && !f.includes('Mini-muffins') && !f.includes('gender_reveal_beige');
+    })
+    .map(([path, mod]) => {
+      const file = path.split('/').pop()!;
+      // Nom du chien tiré du nom de fichier quand il est identifiable
+      const base = file
+        .replace(/\.(jpg|jpeg|png)$/i, '')
+        .replace(/_(oui+|ouii|crop|femelle)/gi, '')
+        .replace(/_?\d+$/g, '')
+        .replace(/_0$/, '')
+        .replace(/^z_/, '')
+        .replace(/_/g, ' ')
+        .trim();
+      const generic =
+        /^(img|image|chien|chienne|chiens|deux chiens|trois chiens|3 chiens|petit chien|teckel)/i.test(base) ||
+        base.length < 2;
+      const alt = generic
+        ? 'Chien heureux avec sa gâterie Croc Cake'
+        : `${base} avec sa gâterie Croc Cake`;
+      return { img: mod.default, alt, file };
+    })
+    .sort((a, b) => a.file.localeCompare(b.file, 'fr'));
+
+  return paginate(photos, { pageSize: 24 });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: Page<{ img: ImageMetadata; alt: string; file: string }>;
+}
+const { page } = Astro.props;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
+    name: 'Galerie Croc Cake — chiens heureux et gâteaux en fête',
+    url: `${SITE.url}${page.url.current}`,
+    description:
+      'Photos de nos clients à quatre pattes qui dégustent leurs gâteaux et gâteries Croc Cake.',
+  },
+];
+---
+
+<Base
+  title={`Galerie photos — chiens heureux${page.currentPage > 1 ? ` (page ${page.currentPage})` : ''} | Croc Cake`}
+  description="La preuve en images : des dizaines de chiens heureux qui dévorent leurs gâteaux Croc Cake. Photos envoyées par nos clients de partout au Québec."
+  path={page.url.current}
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-4 py-10 md:py-14">
+    <header class="max-w-3xl">
+      <h1 class="font-display font-extrabold text-4xl text-brun-950">Galerie de chiens heureux</h1>
+      <p class="mt-3 text-lg text-charbon/80">
+        Les photos de nos clients — la queue frétillante et les babines pleines de glaçage.
+        Envoyez-nous la vôtre sur
+        <a href={SITE.social.instagram} rel="noopener" target="_blank" class="text-rouge-700 font-semibold hover:underline">Instagram</a> ou
+        <a href={SITE.social.facebook} rel="noopener" target="_blank" class="text-rouge-700 font-semibold hover:underline">Facebook</a> !
+      </p>
+    </header>
+
+    <div class="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+      {page.data.map(({ img, alt }) => (
+        <Image
+          src={img}
+          alt={alt}
+          widths={[300, 600]}
+          sizes="(min-width: 1024px) 270px, (min-width: 640px) 30vw, 45vw"
+          class="rounded-2xl object-cover aspect-square shadow-sm hover:shadow-lg transition-shadow bg-beige-100"
+          loading="lazy"
+        />
+      ))}
+    </div>
+
+    <nav aria-label="Pagination de la galerie" class="mt-10 flex items-center justify-center gap-2">
+      {page.url.prev && (
+        <a href={page.url.prev} class="rounded-full border-2 border-brun-300 px-5 py-2 font-semibold text-brun-800 hover:bg-beige-100 transition-colors">
+          ← Précédente
+        </a>
+      )}
+      <span class="px-4 py-2 text-sm font-semibold text-charbon/70">
+        Page {page.currentPage} de {page.lastPage}
+      </span>
+      {page.url.next && (
+        <a href={page.url.next} class="rounded-full bg-rouge-600 px-5 py-2 font-bold text-white hover:bg-rouge-700 transition-colors">
+          Suivante →
+        </a>
+      )}
+    </nav>
+  </div>
+</Base>

@@ -1,0 +1,209 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import StoreLocator from '../components/StoreLocator.astro';
+import { SITE } from '../data/site';
+import stores from '../data/stores.json';
+
+import gateauRose from '../assets/photos/IMG_20250227_181206_crop_3.JPG';
+import gateauBleu from '../assets/photos/IMG_20250227_185200_crop_2.JPG';
+import gateauBA from '../assets/photos/IMG_20250227_182503_crop_2.JPG';
+import gateauFromage from '../assets/photos/IMG_20250227_193515_crop_4.JPG';
+import photoTroisChiens from '../assets/photos/3_chiens.jpg';
+import photoChapeau from '../assets/photos/Chien_chapeau_de_fte_bleu.jpg';
+import photoAttrape from '../assets/photos/Chien_qui_attrape_les_morceaux_1.jpg';
+import photoTeckel from '../assets/photos/Teckel_1.jpg';
+import photoMuffins from '../assets/photos/Mini-muffins_sans_texte.png';
+import gateauBeige from '../assets/photos/gender_reveal_beige.png';
+
+const REGIONS = [
+  'Montréal', 'Laval', 'Capitale-Nationale', 'Montérégie', 'Outaouais', 'Lanaudière',
+  'Laurentides', 'Mauricie', 'Estrie', 'Centre-du-Québec', 'Abitibi-Témiscamingue',
+  'Chaudière-Appalaches'
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SITE.url}/#website`,
+    url: SITE.url,
+    name: SITE.shortName,
+    description: SITE.description,
+    inLanguage: 'fr-CA',
+    publisher: { '@id': `${SITE.url}/#organization` },
+  },
+];
+---
+
+<Base
+  title="Croc Cake — Gâteaux pour chiens faits au Québec | Pour des moments festifs avec vos animours !"
+  description="Gâteaux d’anniversaire, gâteaux gender reveal et mini-muffins pour chiens, confectionnés au Québec par Croc Cake. En vente dans une centaine d’animaleries partenaires. Trouvez la vôtre par code postal !"
+  path="/"
+  jsonLd={jsonLd}
+>
+  <!-- Héros -->
+  <section class="bg-gradient-to-b from-beige-100 to-beige-50">
+    <div class="mx-auto max-w-6xl px-4 py-12 md:py-20 grid items-center gap-10 md:grid-cols-2">
+      <div>
+        <p class="inline-block rounded-full bg-rouge-100 text-rouge-800 px-4 py-1 text-sm font-bold">
+          Pour les chiens d’ici
+        </p>
+        <h1 class="mt-4 font-display font-extrabold text-4xl md:text-5xl leading-tight text-brun-950">
+          Des gâteaux <span class="text-rouge-600">pour chiens</span> qui font des heureux
+        </h1>
+        <p class="mt-4 text-lg text-charbon italic">« {SITE.slogan} »</p>
+        <p class="mt-4 text-lg text-charbon">
+          Anniversaires, adoptions, gotcha days… Offrez à votre compagnon un vrai gâteau
+          conçu pour lui, avec des ingrédients choisis pour les chiens. En vente dans une
+          centaine d’animaleries partenaires partout au Québec.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a
+            href="#localisateur"
+            class="rounded-full bg-rouge-600 px-8 py-3.5 font-display font-bold text-lg text-white hover:bg-rouge-700 shadow-lg transition-colors"
+          >
+            Trouver une animalerie
+          </a>
+          <a
+            href="/produits"
+            class="rounded-full border-2 border-brun-800 px-8 py-3.5 font-display font-bold text-lg text-brun-900 hover:bg-brun-900 hover:text-beige-50 transition-colors"
+          >
+            Voir nos produits
+          </a>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="grid grid-cols-2 gap-4">
+          <Image src={gateauRose} alt="Gâteau pour chien avec glaçage rose de Croc Cake" widths={[320, 640]} sizes="(min-width: 768px) 280px, 45vw" class="rounded-3xl shadow-xl rotate-[-2deg]" loading="eager" />
+          <Image src={gateauBleu} alt="Gâteau pour chien avec glaçage bleu de Croc Cake" widths={[320, 640]} sizes="(min-width: 768px) 280px, 45vw" class="rounded-3xl shadow-xl rotate-[2deg] mt-6" loading="eager" />
+        </div>
+        <p class="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white shadow-md px-4 py-1.5 text-sm font-bold text-brun-800 whitespace-nowrap">
+          🎂 De vrais gâteaux, pour de vrais chiens
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Localisateur -->
+  <section class="mx-auto max-w-6xl px-4 -mt-2 md:mt-4">
+    <StoreLocator />
+    <p class="mt-3 text-sm text-charbon/60">
+      {stores.length} succursales géolocalisées pour l’instant — la liste complète de notre
+      centaine de points de vente se trouve sur la page
+      <a href="/points-de-vente" class="text-rouge-700 font-semibold hover:underline">Points de vente</a>.
+    </p>
+  </section>
+
+  <!-- Produits vedettes -->
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <h2 class="font-display font-bold text-3xl text-brun-950 text-center">Nos gourmandises</h2>
+    <div class="mt-2 text-center text-charbon max-w-2xl mx-auto space-y-2">
+      <p><strong>Gâteaux :</strong> Saveur porc ou poulet, glaçage au fromage ou fromage-beurre d’arachides — emballés individuellement et bons 24 mois congelés et 6 jours au réfrigérateur.</p>
+      <p><strong>Mini-muffins :</strong> Saveur porc ou poulet, 6 par emballage. Bons 24 mois congelés et 6 jours au réfrigérateur.</p>
+    </div>
+    <div class="mt-8 grid gap-6 md:grid-cols-3">
+      <a href="/produits#gateaux" class="group rounded-3xl bg-white border border-beige-200 shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+        <Image src={gateauFromage} alt="Gâteau pour chien au glaçage fromage" widths={[400, 800]} sizes="(min-width: 768px) 380px, 92vw" class="aspect-square object-cover w-full group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-5">
+          <h3 class="font-display font-bold text-xl text-brun-900">Gâteaux alléchants</h3>
+          <p class="mt-1 text-sm text-charbon">Le classique festif, entre 17,99 $ et 19,99 $ selon la succursale.</p>
+        </div>
+      </a>
+      <a href="/produits#gender-reveal" class="group rounded-3xl bg-white border border-beige-200 shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+        <Image src={gateauBeige} alt="Gâteau gender reveal beige pour chien" widths={[400, 800]} sizes="(min-width: 768px) 380px, 92vw" class="aspect-square object-cover w-full group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-5">
+          <h3 class="font-display font-bold text-xl text-brun-900">Gâteaux gender reveal</h3>
+          <p class="mt-1 text-sm text-charbon">Votre chien annonce la grande nouvelle ! À commander 1 mois à l’avance.</p>
+        </div>
+      </a>
+      <a href="/produits#mini-muffins" class="group rounded-3xl bg-white border border-beige-200 shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+        <Image src={photoMuffins} alt="Sacs de mini-muffins pour chiens" widths={[400, 800]} sizes="(min-width: 768px) 380px, 92vw" class="aspect-square object-cover w-full group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-5">
+          <h3 class="font-display font-bold text-xl text-brun-900">Mini-muffins</h3>
+          <p class="mt-1 text-sm text-charbon">Sacs de 6 mini-cupcakes, porc ou poulet. Une gâterie par jour, aucun problème !</p>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Pourquoi Croc Cake -->
+  <section class="bg-brun-950 text-beige-100">
+    <div class="mx-auto max-w-6xl px-4 py-14">
+      <h2 class="font-display font-bold text-3xl text-white text-center">Pourquoi Croc Cake ?</h2>
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-2xl bg-brun-900/60 p-6">
+          <p class="text-3xl">🐶</p>
+          <h3 class="mt-2 font-display font-bold text-lg text-white">Pensés pour les chiens</h3>
+          <p class="mt-1 text-sm text-beige-300">Des ingrédients choisis spécifiquement pour eux — pas un dessert humain déguisé.</p>
+        </div>
+        <div class="rounded-2xl bg-brun-900/60 p-6">
+          <p class="text-3xl">🔬</p>
+          <h3 class="mt-2 font-display font-bold text-lg text-white">Rigueur d’ingénieure</h3>
+          <p class="mt-1 text-sm text-beige-300">Conçus et confectionnés avec de hauts standards de qualité par notre fondatrice ingénieure.</p>
+        </div>
+        <div class="rounded-2xl bg-brun-900/60 p-6">
+          <p class="text-3xl">❄️</p>
+          <h3 class="mt-2 font-display font-bold text-lg text-white">24 mois au congélateur</h3>
+          <p class="mt-1 text-sm text-beige-300">Emballés individuellement : toujours un gâteau prêt pour les occasions spéciales.</p>
+        </div>
+        <div class="rounded-2xl bg-brun-900/60 p-6">
+          <p class="text-3xl">🏪</p>
+          <h3 class="mt-2 font-display font-bold text-lg text-white">Partout au Québec</h3>
+          <p class="mt-1 text-sm text-beige-300">Une centaine d’animaleries partenaires dans 11 régions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Galerie aperçu -->
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <div class="flex items-end justify-between gap-4">
+      <div>
+        <h2 class="font-display font-bold text-3xl text-brun-950">Des chiens heureux</h2>
+        <p class="mt-1 text-charbon">Nos meilleurs clients: nos amis a quattre pattes.</p>
+      </div>
+      <a href="/galerie" class="shrink-0 rounded-full border-2 border-rouge-600 px-5 py-2 font-bold text-rouge-700 hover:bg-rouge-600 hover:text-white transition-colors">
+        Voir la galerie
+      </a>
+    </div>
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+      <Image src={photoTroisChiens} alt="Trois chiens qui attendent leur gâteau Croc Cake" widths={[300, 600]} sizes="(min-width: 768px) 270px, 45vw" class="rounded-2xl object-cover aspect-square shadow-md" />
+      <Image src={photoChapeau} alt="Chien avec un chapeau de fête bleu devant son gâteau" widths={[300, 600]} sizes="(min-width: 768px) 270px, 45vw" class="rounded-2xl object-cover aspect-square shadow-md" />
+      <Image src={photoAttrape} alt="Chien qui attrape des morceaux de gâteau" widths={[300, 600]} sizes="(min-width: 768px) 270px, 45vw" class="rounded-2xl object-cover aspect-square shadow-md" />
+      <Image src={photoTeckel} alt="Teckel devant sa gâterie Croc Cake" widths={[300, 600]} sizes="(min-width: 768px) 270px, 45vw" class="rounded-2xl object-cover aspect-square shadow-md" />
+    </div>
+  </section>
+
+  <!-- Régions -->
+  <section class="bg-beige-100 border-y border-beige-200">
+    <div class="mx-auto max-w-6xl px-4 py-10">
+      <h2 class="font-display font-bold text-2xl text-brun-950">Nos gâteaux sont disponibles dans ces régions</h2>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {REGIONS.map((r) => (
+          <li>
+            <a href="/points-de-vente" class="inline-block rounded-full bg-white border border-beige-300 px-4 py-1.5 text-sm font-semibold text-brun-800 hover:border-rouge-500 hover:text-rouge-700 transition-colors">
+              {r}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- CTA B2B -->
+  <section class="mx-auto max-w-6xl px-4 py-14">
+    <div class="rounded-3xl bg-rouge-600 text-white p-8 md:p-12 text-center shadow-xl">
+      <h2 class="font-display font-bold text-3xl">Vous êtes une animalerie ?</h2>
+      <p class="mt-2 text-rouge-100 text-lg">
+        Vous aimeriez avoir nos gâteaux dans votre succursale ?
+      </p>
+      <a
+        href="/animaleries"
+        class="mt-5 inline-block rounded-full bg-white px-8 py-3.5 font-display font-bold text-lg text-rouge-700 hover:bg-beige-100 transition-colors shadow-md"
+      >
+        Cliquez ici !
+      </a>
+    </div>
+  </section>
+</Base>

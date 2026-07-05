@@ -1,0 +1,298 @@
+---
+/**
+ * Localisateur d'animaleries partenaires.
+ * L'utilisateur entre un code postal (ou une adresse) et on affiche les
+ * boutiques les plus proches, calculées à vol d'oiseau.
+ * Données : /data/stores.json (boutiques géocodées) + /data/fsa-qc.json
+ * (centroïdes des RTA québécoises, source GeoNames CC BY 4.0).
+ */
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+---
+
+<section
+  id="localisateur"
+  class:list={[
+    'rounded-3xl border border-beige-200 bg-white shadow-lg',
+    compact ? 'p-5 md:p-6' : 'p-6 md:p-10',
+  ]}
+>
+  <h2 class="font-display font-bold text-2xl md:text-3xl text-brun-900">
+    🐾 Trouvez l’animalerie partenaire la plus proche
+  </h2>
+  <p class="mt-2 text-charbon/80">
+    Entrez votre code postal ou votre adresse pour découvrir où acheter nos gâteaux près de chez vous.
+  </p>
+
+  <form id="loc-form" class="mt-5 flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <label for="loc-input" class="sr-only">Code postal ou adresse</label>
+      <input
+        id="loc-input"
+        type="text"
+        name="q"
+        placeholder="Ex. : H2X 1Y4 ou 123 rue Principale, Laval"
+        autocomplete="off"
+        class="w-full rounded-full border-2 border-beige-300 bg-beige-50 px-5 py-3 text-lg outline-none focus:border-rouge-500 transition-colors"
+        required
+      />
+      <ul id="loc-suggestions" class="absolute z-10 w-full mt-1 bg-white border border-beige-200 rounded-xl shadow-xl hidden overflow-hidden max-h-60 overflow-y-auto text-sm text-left"></ul>
+    </div>
+    <button
+      type="submit"
+      class="rounded-full bg-rouge-600 px-8 py-3 font-display font-bold text-lg text-white hover:bg-rouge-700 active:scale-95 transition-all shadow-md"
+    >
+      Trouver
+    </button>
+    <button
+      type="button"
+      id="loc-geoloc"
+      class="rounded-full border-2 border-brun-300 px-5 py-3 font-semibold text-brun-800 hover:bg-beige-100 transition-colors"
+      title="Utiliser ma position actuelle"
+    >
+      📍 Ma position
+    </button>
+  </form>
+
+  <p id="loc-status" class="mt-4 text-sm text-charbon/70" role="status" aria-live="polite"></p>
+  <ol id="loc-results" class="mt-4 grid gap-3 md:grid-cols-2"></ol>
+  <p id="loc-attribution" class="mt-3 text-xs text-charbon/50 hidden">
+    Distances routières via <a href="https://project-osrm.org/" rel="noopener" class="underline">OSRM</a>. Géolocalisation par
+    <a href="https://www.arcgis.com/" rel="noopener" class="underline">ArcGIS</a> ;
+    centroïdes © <a href="https://www.geonames.org/" rel="noopener" class="underline">GeoNames</a>.
+  </p>
+</section>
+
+<script>
+  const form = document.getElementById('loc-form') as HTMLFormElement;
+  const input = document.getElementById('loc-input') as HTMLInputElement;
+  const geolocBtn = document.getElementById('loc-geoloc') as HTMLButtonElement;
+  const statusEl = document.getElementById('loc-status')!;
+  const resultsEl = document.getElementById('loc-results')!;
+  const attribEl = document.getElementById('loc-attribution')!;
+  const suggestionsEl = document.getElementById('loc-suggestions') as HTMLUListElement;
+
+  type Store = {
+    chain: string;
+    branch: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    phone: string | null;
+    website: string | null;
+    region: string;
+    lat: number | null;
+    lng: number | null;
+    dist?: number;
+    duration?: number;
+  };
+
+  let storesCache: Store[] | null = null;
+  let fsaCache: Record<string, [number, number]> | null = null;
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  // Autocomplete logic
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = input.value.trim();
+    if (q.length < 3) {
+      suggestionsEl.classList.add('hidden');
+      return;
+    }
+    
+    debounceTimer = setTimeout(async () => {
+      try {
+        const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?f=json&countryCode=CAN&maxSuggestions=5&text=${encodeURIComponent(q)}`;
+        const r = await fetch(url);
+        const data = await r.json();
+        
+        if (data && data.suggestions && data.suggestions.length > 0) {
+          suggestionsEl.innerHTML = data.suggestions.map((s: any) => 
+            `<li class="px-4 py-2 hover:bg-beige-50 cursor-pointer text-brun-800 border-b border-beige-100 last:border-0 truncate" data-val="${s.text}">${s.text}</li>`
+          ).join('');
+          suggestionsEl.classList.remove('hidden');
+        } else {
+          suggestionsEl.classList.add('hidden');
+        }
+      } catch {
+        suggestionsEl.classList.add('hidden');
+      }
+    }, 300);
+  });
+
+  suggestionsEl.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'LI') {
+      input.value = target.dataset.val || '';
+      suggestionsEl.classList.add('hidden');
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target as Node) && !suggestionsEl.contains(e.target as Node)) {
+      suggestionsEl.classList.add('hidden');
+    }
+  });
+
+  async function loadData() {
+    if (!storesCache) {
+      const [s, f] = await Promise.all([
+        fetch('/data/stores.json').then((r) => r.json()),
+        fetch('/data/fsa-qc.json').then((r) => r.json()),
+      ]);
+      storesCache = (s as Store[]).filter((x) => x.lat != null && x.lng != null);
+      fsaCache = f;
+    }
+    return { stores: storesCache!, fsa: fsaCache! };
+  }
+
+  function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+    const rad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * rad;
+    const dLng = (lng2 - lng1) * rad;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  async function geocodeQuery(q: string): Promise<{ lat: number; lng: number } | null> {
+    const { fsa } = await loadData();
+    const cleaned = q.trim().toUpperCase().replace(/\s+/g, ' ');
+    // Code postal canadien (complet ou partiel) → centroïde de la RTA
+    const postalMatch = cleaned.replace(/\s/g, '').match(/^([A-Z]\d[A-Z])(\d[A-Z]\d)?$/);
+    if (postalMatch) {
+      const c = fsa[postalMatch[1]];
+      if (c) return { lat: c[0], lng: c[1] };
+    }
+    // Adresse libre (ou RTA inconnue) → ArcGIS (plus fiable et pas de blocage 403)
+    let queryForGeocode = q;
+    if (cleaned === 'QUÉBEC' || cleaned === 'QUEBEC') {
+      queryForGeocode = 'Ville de Québec, QC';
+    } else if (!cleaned.match(/QU[ÉE]BEC|QC/)) {
+      queryForGeocode = q + ', QC';
+    }
+    
+    const url =
+      'https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&maxLocations=1&singleLine=' +
+      encodeURIComponent(queryForGeocode);
+      
+    try {
+      const r = await fetch(url, { headers: { Accept: 'application/json' } });
+      const data = await r.json();
+      if (data && data.candidates && data.candidates[0]) {
+        return { lat: data.candidates[0].location.y, lng: data.candidates[0].location.x };
+      }
+    } catch {
+      /* réseau indisponible */
+    }
+    return null;
+  }
+
+  async function render(origin: { lat: number; lng: number }, stores: Store[]) {
+    // 1. Trouver les 15 plus proches à vol d'oiseau pour ne pas surcharger l'API
+    let ranked = stores
+      .map((s) => ({ ...s, dist: haversineKm(origin.lat, origin.lng, s.lat!, s.lng!) }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 15);
+
+    // 2. Obtenir les distances routières avec OSRM
+    try {
+      const coords = [
+        `${origin.lng},${origin.lat}`,
+        ...ranked.map(s => `${s.lng},${s.lat}`)
+      ].join(';');
+      
+      const osrmUrl = `https://router.project-osrm.org/table/v1/driving/${coords}?sources=0&annotations=duration,distance`;
+      const r = await fetch(osrmUrl);
+      const data = await r.json();
+      
+      if (data && data.distances && data.distances[0] && data.durations && data.durations[0]) {
+        const drivingDistances = data.distances[0];
+        const drivingDurations = data.durations[0];
+        ranked = ranked.map((s, i) => {
+          const dMeters = drivingDistances[i + 1];
+          const dSeconds = drivingDurations[i + 1];
+          if (dMeters != null) {
+            s.dist = dMeters / 1000;
+          }
+          if (dSeconds != null) {
+            s.duration = dSeconds / 60;
+          }
+          return s;
+        });
+        ranked.sort((a, b) => (a.duration || a.dist || 0) - (b.duration || b.dist || 0));
+      }
+    } catch {
+      // Fallback au vol d'oiseau si OSRM échoue
+    }
+
+    // 3. Garder les 6 meilleurs
+    ranked = ranked.slice(0, 6);
+
+    resultsEl.innerHTML = ranked
+      .map((s, i) => {
+        const mapsUrl =
+          'https://www.google.com/maps/dir/?api=1&destination=' +
+          encodeURIComponent(`${s.address}, ${s.city}, QC ${s.postalCode}`);
+        return `
+        <li class="rounded-2xl border ${i === 0 ? 'border-rouge-400 bg-rouge-50' : 'border-beige-200 bg-beige-50'} p-4">
+            <div class="flex items-start justify-between gap-2">
+              <p class="font-display font-bold text-brun-900">${s.chain}${s.branch ? ' — ' + s.branch : ''}</p>
+              <span class="shrink-0 inline-flex items-center rounded-full ${i === 0 ? 'bg-rouge-600 text-white' : 'bg-beige-200 text-brun-800'} px-2.5 py-0.5 text-xs font-bold whitespace-nowrap">
+                ${s.duration != null ? Math.round(s.duration) + ' min' : (s.dist < 10 ? s.dist.toFixed(1) : Math.round(s.dist)) + ' km'}
+              </span>
+            </div>
+          <p class="mt-1 text-sm">${s.address}<br/>${s.city}, QC ${s.postalCode}</p>
+          <div class="mt-2 flex flex-wrap gap-3 text-sm font-semibold">
+            <a class="text-rouge-700 hover:underline" href="${mapsUrl}" rel="noopener" target="_blank">Itinéraire</a>
+            ${s.website ? `<a class="text-brun-700 hover:underline" href="${s.website}" rel="noopener" target="_blank">Site web</a>` : ''}
+            ${s.phone ? `<a class="text-brun-700 hover:underline" href="tel:${s.phone.replace(/[^0-9+]/g, '')}">${s.phone}</a>` : ''}
+          </div>
+        </li>`;
+      })
+      .join('');
+    attribEl.classList.remove('hidden');
+    statusEl.textContent = `${ranked.length} animaleries partenaires près de vous :`;
+  }
+
+  async function search(origin: { lat: number; lng: number } | null) {
+    if (!origin) {
+      statusEl.textContent =
+        'Désolé, nous n’avons pas pu localiser cette adresse. Vérifiez le code postal, ou consultez la liste complète sur la page Points de vente.';
+      resultsEl.innerHTML = '';
+      return;
+    }
+    const { stores } = await loadData();
+    await render(origin, stores);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusEl.textContent = 'Recherche en cours…';
+    try {
+      await search(await geocodeQuery(input.value));
+    } catch {
+      statusEl.textContent = 'Une erreur est survenue. Réessayez dans quelques instants.';
+    }
+  });
+
+  geolocBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      statusEl.textContent = 'La géolocalisation n’est pas offerte par votre navigateur.';
+      return;
+    }
+    statusEl.textContent = 'Localisation en cours…';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => search({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {
+        statusEl.textContent =
+          'Impossible d’obtenir votre position. Entrez plutôt votre code postal.';
+      },
+      { timeout: 10000 }
+    );
+  });
+</script>

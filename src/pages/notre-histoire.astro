@@ -1,0 +1,113 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+import logo from '../assets/logo-croc-cake.png';
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'Notre histoire — Croc Cake',
+    url: `${SITE.url}/notre-histoire`,
+    about: { '@id': `${SITE.url}/#organization` },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Notre histoire', item: `${SITE.url}/notre-histoire` },
+    ],
+  },
+];
+---
+
+<Base
+  title="Notre histoire et nos valeurs | Croc Cake"
+  description="Croc Cake est née de la passion d’Anie Grondin, ingénieure et passionnée des animaux, pour la pâtisserie canine. Découvrez l’équipe, les valeurs et les testeurs officiels de nos gâteaux pour chiens québécois."
+  path="/notre-histoire"
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-4xl px-4 py-10 md:py-14">
+    <header class="text-center">
+      <Image src={logo} alt="Logo Croc Cake" width={140} height={173} class="mx-auto h-32 w-auto" />
+      <h1 class="mt-4 font-display font-extrabold text-4xl text-brun-950">Notre histoire</h1>
+      <p class="mt-2 text-lg text-charbon/70 italic">« {SITE.slogan} »</p>
+    </header>
+
+    <section class="mt-12 prose-lg">
+      <div class="rounded-3xl bg-white border border-beige-200 shadow-md p-6 md:p-10">
+        <h2 class="font-display font-bold text-2xl text-rouge-700">Anie Grondin — fondatrice et propriétaire</h2>
+        <p class="mt-3 text-charbon/85 leading-relaxed">
+          Ingénieure de formation, spécialisée en fabrication et en biomécanique, Anie a uni
+          trois passions pour donner naissance à Croc Cake : les animaux de compagnie —
+          elle fait l’élevage de chats de race depuis 20 ans —, la pâtisserie, et le
+          développement des affaires.
+        </p>
+        <p class="mt-3 text-charbon/85 leading-relaxed">
+          Elle a conçu l’entreprise avec de hauts standards de qualité, où chaque produit
+          est pensé et confectionné avec rigueur. Le résultat : des gâteries qui font
+          autant plaisir aux chiens qu’à leurs humains.
+        </p>
+      </div>
+
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <div class="rounded-3xl bg-white border border-beige-200 shadow-md p-6">
+          <h2 class="font-display font-bold text-xl text-brun-900">Georges Youssef — mentor et conseiller</h2>
+          <p class="mt-3 text-charbon/85 leading-relaxed">
+            Homme d’affaires cumulant plus de 15 ans d’expérience et formé en comptabilité,
+            Georges soutient l’entreprise dans ses investissements, ses achats et son plan
+            financier.
+          </p>
+        </div>
+        <div class="rounded-3xl bg-white border border-beige-200 shadow-md p-6">
+          <h2 class="font-display font-bold text-xl text-brun-900">Naïla Youssef-Grondin — assistante créative</h2>
+          <p class="mt-3 text-charbon/85 leading-relaxed">
+            Créatrice du logo de Croc Cake, Naïla met ses nombreuses qualités artistiques
+            au service de l’image de marque et la conseille avec brio.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-3xl bg-brun-950 text-beige-100 shadow-md p-6 md:p-10">
+        <h2 class="font-display font-bold text-2xl text-white">🐾 Nos testeurs officiels</h2>
+        <p class="mt-3 text-beige-300 leading-relaxed">
+          Aucun produit ne sort de la cuisine sans l’approbation du comité de dégustation :
+        </p>
+        <ul class="mt-4 grid gap-4 sm:grid-cols-3 text-center">
+          <li class="rounded-2xl bg-brun-900/60 p-5">
+            <p class="text-4xl">🐕</p>
+            <p class="mt-2 font-display font-bold text-white">Athéna</p>
+            <p class="text-sm text-beige-300">Goldendoodle</p>
+          </li>
+          <li class="rounded-2xl bg-brun-900/60 p-5">
+            <p class="text-4xl">🐈</p>
+            <p class="mt-2 font-display font-bold text-white">Aflaton</p>
+            <p class="text-sm text-beige-300">Rex de Cornouailles</p>
+          </li>
+          <li class="rounded-2xl bg-brun-900/60 p-5">
+            <p class="text-4xl">🐈</p>
+            <p class="mt-2 font-display font-bold text-white">Bashane</p>
+            <p class="text-sm text-beige-300">Rex de Cornouailles</p>
+          </li>
+        </ul>
+      </div>
+
+      <div class="mt-6 rounded-3xl bg-rouge-50 border-2 border-rouge-200 p-6 md:p-10">
+        <h2 class="font-display font-bold text-2xl text-rouge-800">Nos valeurs</h2>
+        <p class="mt-3 text-charbon/85 leading-relaxed">
+          Chez Croc Cake, la <strong>créativité</strong> et l’<strong>innovation</strong> sont
+          au cœur de tout ce que nous faisons, dans une atmosphère <strong>ludique et
+          joyeuse</strong> où règne le bonheur de tous — les humains comme les animours !
+        </p>
+      </div>
+    </section>
+
+    <div class="mt-12 text-center">
+      <a href="/produits" class="inline-block rounded-full bg-rouge-600 px-8 py-3.5 font-display font-bold text-lg text-white hover:bg-rouge-700 shadow-lg transition-colors">
+        Découvrir nos produits
+      </a>
+    </div>
+  </div>
+</Base>

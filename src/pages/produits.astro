@@ -1,0 +1,203 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+import gateauBeige from '../assets/photos/gender_reveal_beige.png';
+import gateauBA from '../assets/photos/IMG_20250227_182503_crop_2.JPG';
+import gateauFromage from '../assets/photos/IMG_20250227_193515_crop_4.JPG';
+import photoMuffins from '../assets/photos/Mini-muffins_sans_texte.png';
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Gâteau pour chiens Croc Cake',
+    brand: { '@type': 'Brand', name: 'Croc Cake' },
+    description:
+      'Gâteau pour chiens confectionné au Québec, saveur porc ou poulet, glaçage au fromage ou fromage-beurre d’arachides. Emballé individuellement, se conserve 12 mois au congélateur.',
+    image: `${SITE.url}/og-croc-cake.jpg`,
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'CAD',
+      lowPrice: '17.99',
+      highPrice: '19.99',
+      availability: 'https://schema.org/InStock',
+      description: 'Offert dans une centaine d’animaleries partenaires au Québec ; le prix varie selon la succursale.',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Nos produits', item: `${SITE.url}/produits` },
+    ],
+  },
+];
+---
+
+<Base
+  title="Nos produits — Gâteaux, gender reveal et mini-muffins pour chiens | Croc Cake"
+  description="Découvrez les gâteaux pour chiens Croc Cake : saveur porc ou poulet, glaçage fromage ou fromage-beurre d’arachides, gâteaux gender reveal sur commande et sacs de 6 mini-muffins. Entre 17,99 $ et 19,99 $ selon la succursale."
+  path="/produits"
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-4 py-10 md:py-14">
+    <header class="max-w-3xl">
+      <h1 class="font-display font-extrabold text-4xl text-brun-950">Nos produits</h1>
+      <p class="mt-3 text-lg text-charbon/80">
+        Chaque gourmandise est faite d’ingrédients choisis spécifiquement pour les chiens,
+        conçue et confectionnée avec rigueur au Québec. Nos produits sont vendus chez nos
+        <a href="/points-de-vente" class="text-rouge-700 font-semibold hover:underline">animaleries partenaires</a>.
+      </p>
+    </header>
+
+    <!-- Gâteaux -->
+    <section id="gateaux" class="mt-12 grid gap-8 md:grid-cols-2 md:items-center scroll-mt-24">
+      <div class="grid grid-cols-2 gap-4">
+        <Image src={gateauFromage} alt="Gâteau pour chien au glaçage fromage blanc" widths={[400, 800]} sizes="(min-width: 768px) 280px, 45vw" class="rounded-3xl shadow-lg" />
+        <Image src={gateauBA} alt="Gâteau pour chien au glaçage fromage-beurre d’arachides" widths={[400, 800]} sizes="(min-width: 768px) 280px, 45vw" class="rounded-3xl shadow-lg mt-6" />
+      </div>
+      <div>
+        <h2 class="font-display font-bold text-3xl text-brun-900">🎂 Nos gâteaux alléchants</h2>
+        <p class="mt-3 text-charbon/80">
+          Le cadeau parfait pour un anniversaire, une adoption ou simplement pour gâter votre
+          compagnon. Deux saveurs de gâteau au choix, deux glaçages gourmands — et une seule
+          réaction possible : la queue qui frétille.
+        </p>
+        <ul class="mt-5 space-y-3">
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Saveur <strong>porc</strong> ou <strong>poulet</strong></li>
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Un gâteau par semaine ? <strong>Aucun problème ! (ne remplace pas un repas)</strong></li>
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Emballés <strong>individuellement</strong>, se conservent <strong>24 mois congelés et 6 jours au réfrigérateur</strong></li>
+        </ul>
+
+        <div class="mt-6 space-y-4">
+          <!-- Fiche Poulet -->
+          <details class="group rounded-2xl bg-white border border-beige-200 shadow-sm p-4 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer items-center justify-between font-display font-bold text-brun-900 text-lg">
+              Fiche nutritionnelle : Poulet
+              <span class="text-rouge-600 transition duration-300 group-open:-rotate-180">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+              </span>
+            </summary>
+            <div class="mt-4 text-sm text-charbon/80 border-t border-beige-100 pt-4">
+              <p class="font-semibold text-rouge-700 mb-3">1 gâteau = 200 g (738 Kcal)</p>
+              <div class="grid grid-cols-2 gap-3 mb-3">
+                <p><strong>Protéines (min) :</strong> 20,0 % (40g)</p>
+                <p><strong>Humidité (max) :</strong> 35,0 % (70g)</p>
+                <p><strong>Matières grasses (min) :</strong> 28,0 % (56g)</p>
+                <p><strong>Cendres (max) :</strong> 4,0 % (8g)</p>
+                <p><strong>Glucides (max) :</strong> 7,0 % (14g)</p>
+                <p><strong>Fibres (max) :</strong> 1,0 % (2g)</p>
+              </div>
+              <div class="border-t border-beige-100 py-3">
+                <p class="font-semibold text-brun-900 mb-1">Guide alimentaire (portions recommandées) :</p>
+                <p class="text-xs">Jusqu'à 5 kg: 50 g (¼) • 5 à 10 kg: 100 g (½) • 10 à 25 kg: 190 g • 25 kg et +: jusqu'à 500 g</p>
+              </div>
+              <div class="border-t border-beige-100 pt-3 text-xs leading-relaxed">
+                <p><strong>Ingrédients :</strong> Gâteau : Poulet déshydraté, flocons d'avoine, lait, graisse de poulet, œufs, poudre à pâte. Glaçage : fromage à la crème.</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Fiche Porc -->
+          <details class="group rounded-2xl bg-white border border-beige-200 shadow-sm p-4 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer items-center justify-between font-display font-bold text-brun-900 text-lg">
+              Fiche nutritionnelle : Porc
+              <span class="text-rouge-600 transition duration-300 group-open:-rotate-180">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+              </span>
+            </summary>
+            <div class="mt-4 text-sm text-charbon/80 border-t border-beige-100 pt-4">
+              <p class="font-semibold text-rouge-700 mb-3">1 gâteau = 200 g (804 Kcal)</p>
+              <div class="grid grid-cols-2 gap-3 mb-3">
+                <p><strong>Protéines (min) :</strong> 16,0 % (32g)</p>
+                <p><strong>Humidité (max) :</strong> 35,0 % (70g)</p>
+                <p><strong>Matières grasses (min) :</strong> 32,0 % (64g)</p>
+                <p><strong>Cendres (max) :</strong> 5,0 % (10g)</p>
+                <p><strong>Glucides (max) :</strong> 11,0 % (22g)</p>
+                <p><strong>Fibres (max) :</strong> 1,0 % (2g)</p>
+              </div>
+              <div class="border-t border-beige-100 py-3">
+                <p class="font-semibold text-brun-900 mb-1">Guide alimentaire (portions recommandées) :</p>
+                <p class="text-xs">Jusqu'à 5 kg: 50 g (¼) • 5 à 10 kg: 100 g (½) • 10 à 25 kg: 190 g • 25 kg et +: jusqu'à 500 g</p>
+              </div>
+              <div class="border-t border-beige-100 pt-3 text-xs leading-relaxed">
+                <p><strong>Ingrédients :</strong> Gâteau : Porc déshydraté, flocons d'avoine, lait, graisse de porc, œufs, poudre à pâte. Glaçage : fromage à la crème.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <p class="mt-6 inline-block rounded-2xl bg-beige-100 border border-beige-300 px-5 py-3 font-semibold text-brun-900">
+          💰 Entre <strong>17,99 $ et 19,99 $</strong> selon la succursale
+        </p>
+      </div>
+    </section>
+
+    <!-- Gender reveal -->
+    <section id="gender-reveal" class="mt-16 rounded-3xl bg-gradient-to-r from-rouge-50 via-white to-blue-50 border border-beige-200 p-6 md:p-10 scroll-mt-24">
+      <div class="grid gap-8 md:grid-cols-2 md:items-center">
+        <div>
+          <h2 class="font-display font-bold text-3xl text-brun-900">💕 Gâteaux gender reveal 💙</h2>
+          <p class="mt-3 text-charbon/80">
+            Et si c’était votre chien qui annonçait la grande nouvelle ? Nos gâteaux
+            « gender reveal » cachent la couleur de la surprise — rose ou bleu — pour un
+            moment inoubliable en famille, croqué par votre toutou.
+          </p>
+          <p class="mt-4 rounded-2xl bg-white border-2 border-rouge-200 px-5 py-3 font-semibold text-brun-900">
+            📅 À commander environ <strong>1 mois à l’avance</strong>.
+          </p>
+        </div>
+        <div class="flex justify-center items-center">
+          <Image src={gateauBeige} alt="Gâteau gender reveal pour chien, glaçage beige" widths={[400, 800]} sizes="(min-width: 768px) 350px, 90vw" class="rounded-3xl shadow-lg w-full max-w-sm rotate-[-1deg]" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Mini-muffins -->
+    <section id="mini-muffins" class="mt-16 grid gap-8 md:grid-cols-2 md:items-center scroll-mt-24">
+      <div class="order-2 md:order-1">
+        <h2 class="font-display font-bold text-3xl text-brun-900">🧁 Mini-muffins (mini-cupcakes)</h2>
+        <p class="mt-3 text-charbon/80">
+          La gâterie quotidienne des amateurs de gâteau ! Offerts en sacs de 6, au porc ou
+          au poulet — parfaits pour récompenser, célébrer un petit succès ou simplement
+          faire plaisir.
+        </p>
+        <ul class="mt-5 space-y-3">
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Sacs de <strong>6 mini-muffins</strong></li>
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Saveur <strong>porc</strong> ou <strong>poulet</strong></li>
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Une gâterie par jour ? <strong>Aucun problème !</strong></li>
+          <li class="flex gap-3"><span class="text-rouge-600 font-bold">✓</span> Se conservent <strong>24 mois congelés et 6 jours au réfrigérateur</strong></li>
+        </ul>
+      </div>
+      <div class="order-1 md:order-2">
+        <div class="rounded-3xl bg-beige-100 border border-beige-200 p-8 text-center">
+          <Image src={photoMuffins} alt="Mini-muffins pour chiens" widths={[400, 800]} sizes="(min-width: 768px) 280px, 45vw" class="rounded-3xl shadow-md w-full max-w-sm mx-auto mb-4" />
+          <p class="mt-3 font-display font-bold text-brun-900">Demandez-les à votre animalerie !</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Médailles -->
+    <section id="medailles" class="mt-16 rounded-3xl bg-brun-950 text-beige-100 p-6 md:p-10 scroll-mt-24">
+      <h2 class="font-display font-bold text-3xl text-white">🏅 Duo de médailles « Maître et animal »</h2>
+      <p class="mt-3 text-beige-300 max-w-3xl">
+        Deux médailles qui s’emboîtent l’une dans l’autre : une pour vous, une pour votre
+        compagnon. Faites d’acier inoxydable au fini magnifique, elles résistent au temps
+        et à l’usure, sans aucune rouille — et s’utilisent de multiples façons.
+      </p>
+      <a href="/contact" class="mt-5 inline-block rounded-full bg-rouge-600 px-6 py-3 font-display font-bold text-white hover:bg-rouge-500 transition-colors">
+        Informez-vous
+      </a>
+    </section>
+
+    <!-- CTA -->
+    <div class="mt-16 text-center">
+      <a href="/points-de-vente" class="inline-block rounded-full bg-rouge-600 px-10 py-4 font-display font-bold text-xl text-white hover:bg-rouge-700 shadow-lg transition-colors">
+        🐾 Trouver une animalerie près de chez vous
+      </a>
+    </div>
+  </div>
+</Base>

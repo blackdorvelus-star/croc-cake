@@ -1,0 +1,108 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const FAQS = [
+  {
+    q: 'Où peut-on acheter les gâteaux Croc Cake ?',
+    a: 'Nos produits sont vendus dans une centaine d’animaleries partenaires partout au Québec : Chico, Animo etc., Le Tourno, Animal Expert, Pattes & Griffes, Pitou Minou & Compagnons (Global Pet Foods) et plusieurs boutiques indépendantes. Utilisez le localisateur de la page Points de vente pour trouver la succursale la plus proche de chez vous.',
+  },
+  {
+    q: 'Quelles saveurs sont disponibles ?',
+    a: 'Nos gâteaux et mini-muffins sont offerts en saveur porc ou poulet. Pour les gâteaux, deux glaçages gourmands sont proposés : au fromage, ou fromage et beurre d’arachides.',
+  },
+  {
+    q: 'Combien coûte un gâteau Croc Cake ?',
+    a: 'Le prix se situe entre 17,99 $ et 19,99 $, selon la succursale. Chaque animalerie partenaire fixe son prix en boutique.',
+  },
+  {
+    q: 'Comment conserver le gâteau ?',
+    a: 'Nos gâteaux sont emballés individuellement et se conservent 12 mois au congélateur. Vous pouvez donc toujours en avoir un sous la main pour les occasions spéciales !',
+  },
+  {
+    q: 'À quelle fréquence puis-je donner une gâterie à mon chien ?',
+    a: 'Une gâterie par semaine, aucun problème ! Nos produits sont faits d’ingrédients choisis spécifiquement pour les chiens.',
+  },
+  {
+    q: 'Est-ce que les gâteaux sont sécuritaires pour les chiens ?',
+    a: 'Oui. Contrairement aux desserts pour humains, nos recettes sont développées avec des ingrédients choisis spécifiquement pour les chiens, et chaque produit est conçu et confectionné avec rigueur selon de hauts standards de qualité. Pour toute question particulière (allergies, sensibilités), écrivez-nous à info@croccake.com.',
+  },
+  {
+    q: 'Offrez-vous des gâteaux gender reveal ?',
+    a: 'Oui ! Nos gâteaux « gender reveal » cachent un glaçage rose ou bleu pour que votre chien annonce la grande nouvelle. Il faut les commander environ 1 mois à l’avance, via votre animalerie partenaire ou en nous contactant directement.',
+  },
+  {
+    q: 'Que contiennent les sacs de mini-muffins ?',
+    a: 'Chaque sac contient 6 mini-muffins (aussi appelés mini-cupcakes), offerts au porc ou au poulet. C’est la gâterie quotidienne parfaite pour les amateurs de gâteau !',
+  },
+  {
+    q: 'Fabriquez-vous vos produits au Québec ?',
+    a: 'Oui, Croc Cake inc. est une entreprise québécoise établie à Laval. Tous nos produits sont confectionnés ici, au Québec.',
+  },
+  {
+    q: 'Je suis une animalerie : comment offrir vos produits en boutique ?',
+    a: 'Avec plaisir ! Remplissez le formulaire de la page Animaleries (croccake.com/animaleries) ou appelez-nous au 514-265-2824. Nous vous répondrons rapidement avec les détails pour devenir détaillant partenaire.',
+  },
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'FAQ', item: `${SITE.url}/faq` },
+    ],
+  },
+];
+---
+
+<Base
+  title="FAQ — Questions fréquentes sur nos gâteaux pour chiens | Croc Cake"
+  description="Saveurs, prix, conservation, gâteaux gender reveal, fréquence des gâteries : toutes les réponses sur les gâteaux pour chiens Croc Cake, faits au Québec."
+  path="/faq"
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-3xl px-4 py-10 md:py-14">
+    <header>
+      <h1 class="font-display font-extrabold text-4xl text-brun-950">Questions fréquentes</h1>
+      <p class="mt-3 text-lg text-charbon/80">
+        Tout ce que vous voulez savoir sur nos gâteaux — si votre question n’y est pas,
+        <a href="/contact" class="text-rouge-700 font-semibold hover:underline">écrivez-nous</a> !
+      </p>
+    </header>
+
+    <div class="mt-8 space-y-3">
+      {FAQS.map((f) => (
+        <details class="group rounded-2xl border border-beige-200 bg-white shadow-sm open:shadow-md transition-shadow">
+          <summary class="flex cursor-pointer items-center justify-between gap-3 p-5 font-display font-bold text-brun-900 list-none">
+            {f.q}
+            <span class="shrink-0 rounded-full bg-beige-100 p-1.5 text-rouge-600 transition-transform group-open:rotate-45" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </span>
+          </summary>
+          <p class="px-5 pb-5 text-charbon/85 leading-relaxed">{f.a}</p>
+        </details>
+      ))}
+    </div>
+
+    <div class="mt-10 rounded-3xl bg-beige-100 border border-beige-200 p-6 text-center">
+      <p class="font-display font-bold text-xl text-brun-950">Une autre question ?</p>
+      <p class="mt-1 text-charbon/80">
+        📞 <a href={`tel:${SITE.phoneHref}`} class="font-semibold hover:underline">{SITE.phone}</a> ·
+        ✉️ <a href={`mailto:${SITE.email}`} class="font-semibold hover:underline">{SITE.email}</a>
+      </p>
+    </div>
+  </div>
+</Base>

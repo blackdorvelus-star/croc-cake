@@ -1,0 +1,79 @@
+---
+import { NAV } from '../data/site';
+import logo from '../assets/logo-croc-cake.png';
+import { Image } from 'astro:assets';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<header class="sticky top-0 z-50 bg-beige-50/95 backdrop-blur border-b border-beige-200 shadow-sm">
+  <div class="mx-auto max-w-6xl px-4 flex items-center justify-between gap-4 py-2">
+    <a href="/" class="flex items-center gap-2 shrink-0" aria-label="Croc Cake — Accueil">
+      <Image src={logo} alt="Logo Croc Cake : une patte de chien en forme de cupcake" width={56} height={69} loading="eager" class="h-12 w-auto md:h-14" />
+      <span class="font-display font-bold text-xl md:text-2xl text-rouge-700 leading-none">
+        Croc<span class="text-brun-900"> Cake</span>
+      </span>
+    </a>
+
+    <nav aria-label="Navigation principale" class="hidden lg:block">
+      <ul class="flex items-center gap-1">
+        {NAV.map(({ href, label }) => (
+          <li>
+            <a
+              href={href}
+              aria-current={current === href ? 'page' : undefined}
+              class:list={[
+                'px-3 py-2 rounded-full font-semibold text-sm transition-colors',
+                current === href
+                  ? 'bg-rouge-600 text-white'
+                  : 'text-charbon hover:bg-beige-200 hover:text-rouge-700',
+              ]}
+            >
+              {label}
+            </a>
+          </li>
+        ))}
+        <li>
+          <a
+            href="/animaleries"
+            class="ml-2 px-4 py-2 rounded-full font-bold text-sm bg-brun-900 text-beige-50 hover:bg-brun-700 transition-colors"
+          >
+            Devenir partenaire
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Menu mobile -->
+    <details class="lg:hidden relative">
+      <summary class="list-none cursor-pointer p-2 rounded-lg hover:bg-beige-200" aria-label="Ouvrir le menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-brun-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </summary>
+      <nav aria-label="Navigation mobile" class="absolute right-0 mt-2 w-64 rounded-2xl border border-beige-200 bg-white shadow-xl p-2">
+        <ul>
+          {NAV.map(({ href, label }) => (
+            <li>
+              <a
+                href={href}
+                aria-current={current === href ? 'page' : undefined}
+                class:list={[
+                  'block px-4 py-2.5 rounded-xl font-semibold',
+                  current === href ? 'bg-rouge-600 text-white' : 'hover:bg-beige-100',
+                ]}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+          <li class="mt-1 border-t border-beige-200 pt-1">
+            <a href="/animaleries" class="block px-4 py-2.5 rounded-xl font-bold text-brun-900 hover:bg-beige-100">
+              Devenir partenaire 🏪
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
