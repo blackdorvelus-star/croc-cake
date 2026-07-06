@@ -1,8 +1,12 @@
 # Publie une prévisualisation du site sur GitHub Pages.
 # URL : https://blackdorvelus-star.github.io/croc-cake/
-# Le site vise croccake.com en production ; pour la prévisualisation sous
-# le sous-chemin /croc-cake/, on réécrit les URL racine après le build
-# (scripts/rewrite-base.mjs) — le code source reste inchangé.
+#
+# Méthode : on construit le site, on réécrit les URL pour le sous-chemin
+# /croc-cake/ (scripts/rewrite-base.mjs), puis on pousse le résultat sur la
+# branche `gh-pages`. GitHub Pages doit être réglé sur
+# « Deploy from a branch » → gh-pages → /(root) (une seule fois, dans
+# Settings → Pages). Cette approche évite l'environnement `github-pages` et
+# ses règles de protection.
 name: Prévisualisation GitHub Pages
 
 on:
@@ -11,17 +15,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# Une seule prévisualisation à la fois
 concurrency:
-  group: pages
+  group: pages-branch
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,19 +38,15 @@ jobs:
           PREVIEW_BASE: /croc-cake
       - name: Désactiver Jekyll (sert les dossiers _astro)
         run: touch dist/.nojekyll
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publier sur la branche gh-pages
+        run: |
+          cd dist
+          git init -q
+          git checkout -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Déploiement prévisualisation ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
