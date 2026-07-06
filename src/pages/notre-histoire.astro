@@ -1,8 +1,33 @@
 ---
 import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import Base from '../layouts/Base.astro';
 import { SITE } from '../data/site';
 import logo from '../assets/logo-croc-cake.png';
+
+// Photos des testeurs officiels : déposer dans src/assets/photos/testeurs/
+// des fichiers dont le nom contient « athena », « aflaton » ou « bashane »
+// (ex. athena.jpg) — elles seront affichées automatiquement.
+const testeurPhotos = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/photos/testeurs/*.{jpg,JPG,jpeg,png,webp}',
+  { eager: true }
+);
+function photoDe(nom: string): ImageMetadata | undefined {
+  const clef = nom
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+  const entree = Object.entries(testeurPhotos).find(([chemin]) =>
+    chemin.split('/').pop()!.toLowerCase().includes(clef)
+  );
+  return entree?.[1].default;
+}
+
+const TESTEURS = [
+  { nom: 'Athéna', race: 'Goldendoodle', emoji: '🐕' },
+  { nom: 'Aflaton', race: 'Rex de Cornouailles', emoji: '🐈' },
+  { nom: 'Bashane', race: 'Rex de Cornouailles', emoji: '🐈' },
+].map((t) => ({ ...t, photo: photoDe(t.nom) }));
 
 const jsonLd = [
   {
@@ -76,21 +101,23 @@ const jsonLd = [
           Aucun produit ne sort de la cuisine sans l’approbation du comité de dégustation :
         </p>
         <ul class="mt-4 grid gap-4 sm:grid-cols-3 text-center">
-          <li class="rounded-2xl bg-brun-900/60 p-5">
-            <p class="text-4xl">🐕</p>
-            <p class="mt-2 font-display font-bold text-white">Athéna</p>
-            <p class="text-sm text-beige-300">Goldendoodle</p>
-          </li>
-          <li class="rounded-2xl bg-brun-900/60 p-5">
-            <p class="text-4xl">🐈</p>
-            <p class="mt-2 font-display font-bold text-white">Aflaton</p>
-            <p class="text-sm text-beige-300">Rex de Cornouailles</p>
-          </li>
-          <li class="rounded-2xl bg-brun-900/60 p-5">
-            <p class="text-4xl">🐈</p>
-            <p class="mt-2 font-display font-bold text-white">Bashane</p>
-            <p class="text-sm text-beige-300">Rex de Cornouailles</p>
-          </li>
+          {TESTEURS.map((t) => (
+            <li class="rounded-2xl bg-brun-900/60 p-5">
+              {t.photo ? (
+                <Image
+                  src={t.photo}
+                  alt={`${t.nom}, ${t.race}, testeur officiel de Croc Cake`}
+                  widths={[300, 600]}
+                  sizes="(min-width: 640px) 220px, 80vw"
+                  class="mx-auto rounded-2xl object-cover object-[center_30%] aspect-square w-full max-w-[220px] shadow-md"
+                />
+              ) : (
+                <p class="text-4xl">{t.emoji}</p>
+              )}
+              <p class="mt-2 font-display font-bold text-white">{t.nom}</p>
+              <p class="text-sm text-beige-300">{t.race}</p>
+            </li>
+          ))}
         </ul>
       </div>
 

@@ -23,11 +23,12 @@ export const SITE = {
 } as const;
 
 /**
- * Clé d'accès Web3Forms (service gratuit qui achemine les formulaires vers
- * info@croccake.com). Pour l'obtenir : https://web3forms.com → entrer
- * info@croccake.com → la clé arrive par courriel. Remplacer la valeur ci-dessous.
+ * URL du futur site dédié aux demandes de partenariat des animaleries.
+ * Tant qu'elle est vide, la page /animaleries affiche un bouton de courriel
+ * pré-rempli vers info@croccake.com ; dès qu'elle est renseignée, le bouton
+ * pointe vers ce site.
  */
-export const WEB3FORMS_KEY = 'REMPLACEZ_PAR_VOTRE_CLE_WEB3FORMS';
+export const PARTNER_PORTAL_URL = '';
 
 export const NAV = [
   { href: '/', label: 'Accueil' },

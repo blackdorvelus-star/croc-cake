@@ -1,0 +1,13 @@
+Photos des testeurs officiels (page « Notre histoire »)
+========================================================
+Déposer ici trois photos dont le nom contient le prénom de l'animal :
+
+  athena.jpg   → Athéna (Goldendoodle)
+  aflaton.jpg  → Aflaton (Rex de Cornouailles)
+  bashane.jpg  → Bashane (Rex de Cornouailles)
+
+Elles s'afficheront automatiquement au prochain build.
+Les originaux se trouvent sur l'ancien site :
+  https://croccake.com/owebo-votresite/sites/default/files/images/IMG_20210407_165611_0.jpg  (Athéna)
+  https://croccake.com/owebo-votresite/sites/default/files/images/Aflaton_1.JPG              (Aflaton)
+  https://croccake.com/owebo-votresite/sites/default/files/images/Bashane_1.jpg              (Bashane)

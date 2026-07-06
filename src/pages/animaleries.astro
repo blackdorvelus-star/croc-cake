@@ -1,6 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
-import { SITE, WEB3FORMS_KEY } from '../data/site';
+import { SITE, PARTNER_PORTAL_URL } from '../data/site';
+
+// Sujet et corps pré-remplis pour le courriel de demande de partenariat,
+// livré directement dans la boîte de réception de Croc Cake.
+const mailtoPartenaire = `mailto:${SITE.email}?subject=${encodeURIComponent(
+  'Demande de partenariat — animalerie'
+)}&body=${encodeURIComponent(
+  'Bonjour,\n\nNous aimerions offrir les produits Croc Cake dans notre succursale.\n\nNom de la compagnie : \nPersonne à contacter : \nTéléphone : \nEmplacement / nombre de succursales : \n\nMerci !'
+)}`;
 
 const jsonLd = [
   {
@@ -9,7 +17,7 @@ const jsonLd = [
     name: 'Espace animaleries — devenir détaillant Croc Cake',
     url: `${SITE.url}/animaleries`,
     description:
-      'Les animaleries du Québec peuvent offrir les gâteaux pour chiens Croc Cake en boutique. Formulaire de demande pour devenir détaillant partenaire.',
+      'Les animaleries du Québec peuvent offrir les gâteaux pour chiens Croc Cake en boutique. Contactez-nous pour devenir détaillant partenaire.',
   },
   {
     '@context': 'https://schema.org',
@@ -24,7 +32,7 @@ const jsonLd = [
 
 <Base
   title="Animaleries — Offrez les gâteaux Croc Cake dans votre succursale"
-  description="Vous êtes une animalerie au Québec ? Rejoignez la centaine de détaillants qui offrent les gâteaux pour chiens Croc Cake. Produit québécois, emballé individuellement, 12 mois de conservation au congélateur. Demande en ligne."
+  description="Vous êtes une animalerie au Québec ? Rejoignez la centaine de détaillants qui offrent les gâteaux pour chiens Croc Cake. Produit québécois, emballé individuellement, 24 mois de conservation au congélateur."
   path="/animaleries"
   jsonLd={jsonLd}
 >
@@ -51,7 +59,7 @@ const jsonLd = [
       <div class="rounded-2xl bg-beige-100 border border-beige-200 p-5">
         <p class="text-2xl">❄️</p>
         <p class="mt-1 font-display font-bold text-brun-900">Logistique simple</p>
-        <p class="text-sm text-charbon/70">Emballage individuel, 12 mois de conservation au congélateur.</p>
+        <p class="text-sm text-charbon/70">Emballage individuel, 24 mois de conservation au congélateur.</p>
       </div>
       <div class="rounded-2xl bg-beige-100 border border-beige-200 p-5">
         <p class="text-2xl">🐶</p>
@@ -60,60 +68,39 @@ const jsonLd = [
       </div>
     </div>
 
-    <form action="https://api.web3forms.com/submit" method="POST" class="mt-10 rounded-3xl bg-white border border-beige-200 shadow-md p-6 md:p-8">
-      <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
-      <input type="hidden" name="subject" value="Demande d’animalerie — croccake.com/animaleries" />
-      <input type="hidden" name="from_name" value="Site web Croc Cake (espace animaleries)" />
-      <input type="checkbox" name="botcheck" class="hidden" style="display:none" tabindex="-1" autocomplete="off" />
-      <input type="hidden" name="redirect" value={`${SITE.url}/merci`} />
-
-      <h2 class="font-display font-bold text-2xl text-brun-950">Formulaire de demande</h2>
-      <p class="mt-1 text-charbon/70 text-sm">Nous vous répondrons rapidement avec tous les détails.</p>
-
-      <div class="mt-5 grid gap-4 sm:grid-cols-2">
-        <div>
-          <label for="compagnie" class="block font-semibold text-sm text-brun-900">Nom de votre compagnie *</label>
-          <input id="compagnie" name="compagnie" type="text" required autocomplete="organization"
-            class="mt-1 w-full rounded-xl border-2 border-beige-300 bg-beige-50 px-4 py-2.5 outline-none focus:border-rouge-500 transition-colors" />
-        </div>
-        <div>
-          <label for="personne" class="block font-semibold text-sm text-brun-900">Nom de la personne qui contacte *</label>
-          <input id="personne" name="personne_contact" type="text" required autocomplete="name"
-            class="mt-1 w-full rounded-xl border-2 border-beige-300 bg-beige-50 px-4 py-2.5 outline-none focus:border-rouge-500 transition-colors" />
-        </div>
-        <div>
-          <label for="telephone" class="block font-semibold text-sm text-brun-900">Téléphone *</label>
-          <input id="telephone" name="telephone" type="tel" required autocomplete="tel"
-            class="mt-1 w-full rounded-xl border-2 border-beige-300 bg-beige-50 px-4 py-2.5 outline-none focus:border-rouge-500 transition-colors" />
-        </div>
-        <div>
-          <label for="courriel" class="block font-semibold text-sm text-brun-900">Courriel *</label>
-          <input id="courriel" name="email" type="email" required autocomplete="email"
-            class="mt-1 w-full rounded-xl border-2 border-beige-300 bg-beige-50 px-4 py-2.5 outline-none focus:border-rouge-500 transition-colors" />
-        </div>
-      </div>
-      <div class="mt-4">
-        <label for="demande" class="block font-semibold text-sm text-brun-900">Votre demande *</label>
-        <textarea id="demande" name="demande" rows="6" required
-          class="mt-1 w-full rounded-xl border-2 border-beige-300 bg-beige-50 px-4 py-2.5 outline-none focus:border-rouge-500 transition-colors"
-          placeholder="Parlez-nous de votre boutique : emplacement, nombre de succursales, clientèle…"></textarea>
-      </div>
-      <button type="submit"
-        class="mt-6 w-full rounded-full bg-brun-900 px-8 py-3.5 font-display font-bold text-lg text-beige-50 hover:bg-brun-700 active:scale-[0.99] shadow-md transition-all">
-        Envoyer ma demande
-      </button>
-      <p class="mt-3 text-xs text-charbon/60 text-center">
-        En soumettant ce formulaire, vous consentez à ce que nous utilisions ces renseignements
-        dans le seul but de traiter votre demande de partenariat. Détails dans notre
-        <a href="/confidentialite" class="underline hover:text-rouge-700">politique de confidentialité</a>.
+    <div class="mt-10 rounded-3xl bg-white border border-beige-200 shadow-md p-6 md:p-8 text-center">
+      <h2 class="font-display font-bold text-2xl text-brun-950">Devenez détaillant partenaire</h2>
+      {PARTNER_PORTAL_URL ? (
+        <>
+          <p class="mt-2 text-charbon/80 max-w-2xl mx-auto">
+            Toutes les demandes de partenariat passent par notre espace dédié aux animaleries.
+          </p>
+          <a href={PARTNER_PORTAL_URL} rel="noopener"
+            class="mt-6 inline-block rounded-full bg-brun-900 px-10 py-3.5 font-display font-bold text-lg text-beige-50 hover:bg-brun-700 active:scale-[0.99] shadow-md transition-all">
+            Accéder à l’espace partenaires ↗
+          </a>
+        </>
+      ) : (
+        <>
+          <p class="mt-2 text-charbon/80 max-w-2xl mx-auto">
+            Écrivez-nous directement — votre demande arrive tout droit dans notre boîte
+            de réception et nous vous répondrons rapidement avec tous les détails.
+          </p>
+          <a href={mailtoPartenaire}
+            class="mt-6 inline-block rounded-full bg-brun-900 px-10 py-3.5 font-display font-bold text-lg text-beige-50 hover:bg-brun-700 active:scale-[0.99] shadow-md transition-all">
+            ✉️ Envoyer ma demande par courriel
+          </a>
+          <p class="mt-3 text-sm text-charbon/60">
+            Le courriel s’ouvre pré-rempli dans votre application — il ne reste qu’à compléter et envoyer.
+          </p>
+        </>
+      )}
+      <p class="mt-6 text-charbon/70">
+        Vous préférez le téléphone ? Appelez-nous au
+        <a href={`tel:${SITE.phoneHref}`} class="font-bold text-rouge-700 hover:underline">{SITE.phone}</a>
+        ou écrivez à
+        <a href={`mailto:${SITE.email}`} class="font-bold text-rouge-700 hover:underline">{SITE.email}</a>.
       </p>
-    </form>
-
-    <p class="mt-6 text-center text-charbon/70">
-      Vous préférez le téléphone ? Appelez-nous au
-      <a href={`tel:${SITE.phoneHref}`} class="font-bold text-rouge-700 hover:underline">{SITE.phone}</a>
-      ou écrivez à
-      <a href={`mailto:${SITE.email}`} class="font-bold text-rouge-700 hover:underline">{SITE.email}</a>.
-    </p>
+    </div>
   </div>
 </Base>

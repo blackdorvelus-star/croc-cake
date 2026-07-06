@@ -1,1 +1,506 @@
-[]
+[
+  {
+    "chain": "Animal Expert",
+    "branch": "Jean-Talon",
+    "city": "Montréal",
+    "region": "Montréal",
+    "website": "https://animal-expert.ca/contact"
+  },
+  {
+    "chain": "Animal Expert",
+    "branch": "Maisonneuve",
+    "city": "Montréal",
+    "region": "Montréal",
+    "website": "https://www.animal-expert.ca/contact"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Lachine",
+    "city": "Montréal (Lachine)",
+    "region": "Montréal",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Pattes et Griffes",
+    "branch": "Rue Fleury",
+    "city": "Montréal (Ahuntsic)",
+    "region": "Montréal",
+    "website": "https://www.pattesgriffes.com/pages/trouvez-une-boutique"
+  },
+  {
+    "chain": "Animal Vert",
+    "branch": "Saint-Laurent",
+    "city": "Montréal (Saint-Laurent)",
+    "region": "Montréal",
+    "website": "https://animalvert.com/contact/"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Les Saules",
+    "city": "Québec",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/animalerie-letourno-quebec/"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Vanier",
+    "city": "Québec",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/animalerie-letourno-quebec/#vanier"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Saint-Émile",
+    "city": "Québec (Saint-Émile)",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Charlesbourg (Henri-Bourassa)",
+    "city": "Québec (Charlesbourg)",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/animalerie-letourno-charlesbourg/"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Charlesbourg (de la Faune)",
+    "city": "Québec (Charlesbourg)",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/animalerie-letourno-charlesbourg/"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Beauport",
+    "city": "Québec (Beauport)",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/letourno-beauport/"
+  },
+  {
+    "chain": "Létourno",
+    "branch": "Pont-Rouge",
+    "city": "Pont-Rouge",
+    "region": "Capitale-Nationale",
+    "website": "https://letourno.com/succursales/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Avenue Cartier",
+    "city": "Québec",
+    "region": "Capitale-Nationale",
+    "website": "https://www.chico.ca/boutique/chico-avenue-cartier/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Charlesbourg",
+    "city": "Québec (Charlesbourg)",
+    "region": "Capitale-Nationale",
+    "website": "https://www.chico.ca/boutique/chico-charlesbourg/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Neufchâtel",
+    "city": "Québec (Neufchâtel)",
+    "region": "Capitale-Nationale",
+    "website": "https://www.chico.ca/boutique/chico-neufchatel/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Sainte-Catherine-de-la-Jacques-Cartier",
+    "city": "Sainte-Catherine-de-la-Jacques-Cartier",
+    "region": "Capitale-Nationale",
+    "website": "https://www.chico.ca/boutique/chico-sainte-catherine-de-la-jacques-cartier/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Sainte-Foy",
+    "city": "Québec (Sainte-Foy)",
+    "region": "Capitale-Nationale",
+    "website": "https://www.chico.ca/boutique/chico-sainte-foy/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Val-Bélair",
+    "city": "Québec (Val-Bélair)",
+    "region": "Capitale-Nationale",
+    "website": "https://www.chico.ca/boutique/chico-val-belair/"
+  },
+  {
+    "chain": "Chez Mia Woof",
+    "branch": "Sainte-Anne-de-Beaupré",
+    "city": "Sainte-Anne-de-Beaupré",
+    "region": "Capitale-Nationale",
+    "website": "https://www.animaleriechezmiawoof.com/contact"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Cap-Rouge",
+    "city": "Québec (Cap-Rouge)",
+    "region": "Capitale-Nationale",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Pitou Minou & Compagnons (Global Pet Foods)",
+    "branch": "Beauport",
+    "city": "Québec (Beauport)",
+    "region": "Capitale-Nationale",
+    "website": "https://pitou-minou.ca/global-pet-foods-succursales-quebec/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Saint-Romuald",
+    "city": "Lévis (Saint-Romuald)",
+    "region": "Chaudière-Appalaches",
+    "website": "https://www.chico.ca/boutique/chico-st-romuald/"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Rouyn-Noranda",
+    "city": "Rouyn-Noranda",
+    "region": "Abitibi-Témiscamingue",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Drummondville",
+    "city": "Drummondville",
+    "region": "Centre-du-Québec",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "La Griffe Santé",
+    "branch": "Bécancour",
+    "city": "Bécancour",
+    "region": "Centre-du-Québec",
+    "website": "https://www.facebook.com/lagriffesante/"
+  },
+  {
+    "chain": "Préférence Animale",
+    "branch": "Sherbrooke",
+    "city": "Sherbrooke",
+    "region": "Estrie",
+    "website": "https://preferenceanimale.com/contact/"
+  },
+  {
+    "chain": "La Boîte à Penny",
+    "branch": "Granby",
+    "city": "Granby",
+    "region": "Estrie",
+    "website": "https://laboiteapenny.ca/"
+  },
+  {
+    "chain": "Règne Animal",
+    "branch": "Bromont",
+    "city": "Bromont",
+    "region": "Estrie",
+    "website": "https://regneanimalbromont.simdif.com/contact.html"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Lachenaie",
+    "city": "Terrebonne (Lachenaie)",
+    "region": "Lanaudière",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Mascouche",
+    "city": "Mascouche",
+    "region": "Lanaudière",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Repentigny",
+    "city": "Repentigny",
+    "region": "Lanaudière",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Le Carrefour Canin de Lanaudière",
+    "branch": "",
+    "city": "Saint-Roch-de-l’Achigan",
+    "region": "Lanaudière",
+    "website": "https://www.carrefourcanin.com/nous-joindre"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Boisbriand",
+    "city": "Boisbriand",
+    "region": "Laurentides",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Mirabel (Saint-Canut)",
+    "city": "Mirabel",
+    "region": "Laurentides",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Saint-Eustache",
+    "city": "Saint-Eustache",
+    "region": "Laurentides",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Saint-Jérôme",
+    "city": "Saint-Jérôme",
+    "region": "Laurentides",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Sainte-Thérèse",
+    "city": "Sainte-Thérèse",
+    "region": "Laurentides",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Auteuil",
+    "city": "Laval (Auteuil)",
+    "region": "Laval",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Concorde",
+    "city": "Laval",
+    "region": "Laval",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Fabreville",
+    "city": "Laval (Fabreville)",
+    "region": "Laval",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Val-des-Brises",
+    "city": "Laval",
+    "region": "Laval",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Vimont",
+    "city": "Laval (Vimont)",
+    "region": "Laval",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Aquanimal",
+    "branch": "Trois-Rivières",
+    "city": "Trois-Rivières",
+    "region": "Mauricie",
+    "website": "https://aquanimal.ca/contact"
+  },
+  {
+    "chain": "Animalerie ABC",
+    "branch": "Cap-de-la-Madeleine",
+    "city": "Trois-Rivières (Cap-de-la-Madeleine)",
+    "region": "Mauricie",
+    "website": "https://www.animalerieabc.com/contact/"
+  },
+  {
+    "chain": "La Griffe Santé",
+    "branch": "Trois-Rivières",
+    "city": "Trois-Rivières",
+    "region": "Mauricie",
+    "website": "https://www.facebook.com/lagriffesante/"
+  },
+  {
+    "chain": "Animalerie Chambly",
+    "branch": "Chambly",
+    "city": "Chambly",
+    "region": "Montérégie",
+    "website": "https://animaleriechambly.com/#contact"
+  },
+  {
+    "chain": "Animal Expert",
+    "branch": "Beloeil",
+    "city": "Beloeil",
+    "region": "Montérégie",
+    "website": "http://animal-expert.ca/contact"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Beauharnois",
+    "city": "Beauharnois",
+    "region": "Montérégie",
+    "website": "https://www.chico.ca/boutique/chico-beauharnois"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Boucherville",
+    "city": "Boucherville",
+    "region": "Montérégie",
+    "website": "https://www.chico.ca/boutique/chico-boucherville/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Brossard",
+    "city": "Brossard",
+    "region": "Montérégie",
+    "website": "https://www.chico.ca/boutique/chico-brossard/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Chambly",
+    "city": "Chambly",
+    "region": "Montérégie",
+    "website": "https://www.chico.ca/boutique/chico-chambly/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Delson",
+    "city": "Delson",
+    "region": "Montérégie",
+    "website": "https://www.chico.ca/boutique/chico-delson/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Vaudreuil-Dorion",
+    "city": "Vaudreuil-Dorion",
+    "region": "Montérégie",
+    "website": "https://www.chico.ca/boutique/chico-vaudreuil/"
+  },
+  {
+    "chain": "Doggo Boutique",
+    "branch": "Saint-Jean-sur-Richelieu",
+    "city": "Saint-Jean-sur-Richelieu",
+    "region": "Montérégie",
+    "website": "https://doggoboutique.ca/"
+  },
+  {
+    "chain": "Pitou Minou & Compagnons (Global Pet Foods)",
+    "branch": "Saint-Lazare",
+    "city": "Saint-Lazare",
+    "region": "Montérégie",
+    "website": "https://pitou-minou.ca/global-pet-foods-succursales-quebec/"
+  },
+  {
+    "chain": "Pitou Minou & Compagnons (Global Pet Foods)",
+    "branch": "Vaudreuil",
+    "city": "Vaudreuil-Dorion",
+    "region": "Montérégie",
+    "website": "https://pitou-minou.ca/global-pet-foods-succursales-quebec/"
+  },
+  {
+    "chain": "Safari",
+    "branch": "Brossard (Quartier DIX30)",
+    "city": "Brossard",
+    "region": "Montérégie",
+    "website": "http://safaripetcenter.com/fr/pages/our-stores"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Boucherville",
+    "city": "Boucherville",
+    "region": "Montérégie",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Greenfield Park",
+    "city": "Longueuil (Greenfield Park)",
+    "region": "Montérégie",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Saint-Constant",
+    "city": "Saint-Constant",
+    "region": "Montérégie",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Saint-Hubert",
+    "city": "Longueuil (Saint-Hubert)",
+    "region": "Montérégie",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Animo etc.",
+    "branch": "Saint-Hyacinthe",
+    "city": "Saint-Hyacinthe",
+    "region": "Montérégie",
+    "website": "https://animoetc.com/pages/boutiques"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Aylmer",
+    "city": "Gatineau (Aylmer)",
+    "region": "Outaouais",
+    "website": "https://www.chico.ca/boutique/chico-aylmer/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Boulevard Gréber",
+    "city": "Gatineau",
+    "region": "Outaouais",
+    "website": "https://www.chico.ca/boutique/chico-boulevard-greber/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Boulevard La Vérendrye",
+    "city": "Gatineau",
+    "region": "Outaouais",
+    "website": "https://www.chico.ca/boutique/chico-boulevard-la-verendrye/"
+  },
+  {
+    "chain": "Chico",
+    "branch": "Val-des-Monts",
+    "city": "Val-des-Monts",
+    "region": "Outaouais",
+    "website": "https://www.chico.ca/boutique/chico-val-des-monts/"
+  },
+  {
+    "chain": "Pitou Minou & Compagnons (Global Pet Foods)",
+    "branch": "Aylmer",
+    "city": "Gatineau (Aylmer)",
+    "region": "Outaouais",
+    "website": "https://pitou-minou.ca/global-pet-foods-succursales-quebec/"
+  },
+  {
+    "chain": "Pitou Minou & Compagnons (Global Pet Foods)",
+    "branch": "Cantley",
+    "city": "Cantley",
+    "region": "Outaouais",
+    "website": "https://pitou-minou.ca/global-pet-foods-succursales-quebec/"
+  },
+  {
+    "chain": "Animalerie 4 Pattes",
+    "branch": "Gatineau",
+    "city": "Gatineau",
+    "region": "Outaouais",
+    "website": "https://www.facebook.com/animalerie4pattes/"
+  },
+  {
+    "chain": "Au Royaume des Animaux",
+    "branch": "Gatineau",
+    "city": "Gatineau",
+    "region": "Outaouais",
+    "website": "https://www.facebook.com/auroyaumedesanimaux2015/"
+  },
+  {
+    "chain": "La Niche et Moi",
+    "branch": "Gatineau",
+    "city": "Gatineau",
+    "region": "Outaouais",
+    "website": "https://lanicheetmoi.com/pages/contactez-nous"
+  },
+  {
+    "chain": "Kalimaux",
+    "branch": "Gatineau",
+    "city": "Gatineau",
+    "region": "Outaouais",
+    "website": "https://kalimaux.com/contact/"
+  }
+]
