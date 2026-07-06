@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { SITE, WEB3FORMS_KEY } from '../data/site';
+import { SITE } from '../data/site';
 
 const jsonLd = [
   {
@@ -78,14 +78,9 @@ const jsonLd = [
         </div>
       </div>
 
-      <!-- Formulaire -->
-      <form action="https://api.web3forms.com/submit" method="POST" class="md:col-span-3 rounded-3xl bg-white border border-beige-200 shadow-md p-6 md:p-8">
-        <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
-        <input type="hidden" name="subject" value="Nouveau message — croccake.com" />
-        <input type="hidden" name="from_name" value="Site web Croc Cake" />
-        <input type="checkbox" name="botcheck" class="hidden" style="display:none" tabindex="-1" autocomplete="off" />
-        <input type="hidden" name="redirect" value={`${SITE.url}/merci`} />
-
+      <!-- Formulaire : compose un courriel adressé directement à la boîte
+           de réception de Croc Cake — aucun intermédiaire. -->
+      <form id="form-contact" data-email={SITE.email} class="md:col-span-3 rounded-3xl bg-white border border-beige-200 shadow-md p-6 md:p-8">
         <h2 class="font-display font-bold text-2xl text-brun-950">Écrivez-nous</h2>
 
         <div class="mt-5 grid gap-4 sm:grid-cols-2">
@@ -116,11 +111,35 @@ const jsonLd = [
           Envoyer le message
         </button>
         <p class="mt-3 text-xs text-charbon/60 text-center">
-          En soumettant ce formulaire, vous consentez à ce que nous utilisions ces renseignements
-          dans le seul but de vous répondre — aucune infolettre surprise. Détails dans notre
+          Le bouton ouvre votre application de courriel avec le message prêt à partir vers
+          {SITE.email} — il ne reste qu’à appuyer sur « Envoyer ». Ces renseignements ne servent
+          qu’à vous répondre — aucune infolettre surprise. Détails dans notre
           <a href="/confidentialite" class="underline hover:text-rouge-700">politique de confidentialité</a>.
         </p>
       </form>
     </div>
   </div>
+
+  <script>
+    // À la soumission, compose un courriel pré-rempli vers l'adresse de
+    // l'entreprise : livraison directe dans sa boîte, sans service tiers.
+    const form = document.getElementById('form-contact') as HTMLFormElement;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+      const val = (name: string) =>
+        (form.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null)?.value.trim() ?? '';
+      const corps = [
+        `Nom : ${val('nom')}`,
+        `Courriel : ${val('email')}`,
+        val('telephone') && `Téléphone : ${val('telephone')}`,
+        '',
+        val('message'),
+      ]
+        .filter((l) => l !== false)
+        .join('\n');
+      const sujet = `Message de ${val('nom')} — croccake.com`;
+      window.location.href = `mailto:${form.dataset.email}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+    });
+  </script>
 </Base>
