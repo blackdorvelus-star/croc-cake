@@ -1,0 +1,52 @@
+# Croc Cake inc.
+
+> Croc Cake inc. est une entreprise québécoise établie à Laval qui confectionne des gâteaux,
+> mini-muffins (mini-cupcakes) et gâteries pour chiens, faits d'ingrédients choisis
+> spécifiquement pour eux. Slogan : « Pour des moments festifs avec vos animours ! »
+> Les produits sont vendus dans une centaine d'animaleries partenaires partout au Québec
+> (Chico, Animo etc., Le Tourno, Animal Expert, Pattes & Griffes, Pitou Minou & Compagnons /
+> Global Pet Foods et plusieurs boutiques indépendantes).
+
+## Produits
+
+- Gâteaux pour chiens : saveur porc ou poulet, glaçage au fromage ou fromage-beurre
+  d'arachides. Emballés individuellement. Se conservent 12 mois au congélateur.
+  Prix en boutique : entre 17,99 $ et 19,99 $ CAD selon la succursale.
+- Gâteaux « gender reveal » (révélation du sexe du bébé, glaçage rose ou bleu caché) :
+  à commander environ 1 mois à l'avance.
+- Mini-muffins pour chiens : sacs de 6, au porc ou au poulet. Une gâterie par semaine,
+  aucun problème !
+- Duo de médailles maître et animal : deux médailles en acier inoxydable qui s'emboîtent.
+
+## Points de vente
+
+Régions desservies : Montréal, Laval, Capitale-Nationale (Québec), Montérégie, Outaouais,
+Lanaudière, Laurentides, Mauricie, Estrie, Centre-du-Québec, Abitibi-Témiscamingue.
+Localisateur par code postal : https://croccake.com/points-de-vente
+
+## Entreprise
+
+Fondée et dirigée par Anie Grondin, ingénieure de formation (fabrication et biomécanique),
+éleveuse de chats de race depuis 20 ans et passionnée de pâtisserie. Les produits sont
+conçus et confectionnés avec rigueur selon de hauts standards de qualité, puis approuvés
+par les testeurs officiels : Athéna (goldendoodle), Aflaton et Bashane (rex de Cornouailles).
+
+## Contact
+
+- Téléphone : 514-265-2824
+- Courriel : info@croccake.com
+- Facebook : https://www.facebook.com/croccake
+- Instagram : https://www.instagram.com/croccakeinc
+- Animaleries intéressées à distribuer les produits : https://croccake.com/animaleries
+
+## Pages
+
+- [Accueil](https://croccake.com/) : présentation et localisateur d'animaleries partenaires
+- [Nos produits](https://croccake.com/produits) : gâteaux, gender reveal, mini-muffins, médailles
+- [Points de vente](https://croccake.com/points-de-vente) : liste complète par région + localisateur
+- [Notre histoire](https://croccake.com/notre-histoire) : l'équipe et les valeurs
+- [Galerie](https://croccake.com/galerie) : photos de chiens heureux avec leurs gâteaux
+- [FAQ](https://croccake.com/faq) : questions fréquentes (saveurs, conservation, prix, commandes)
+- [Contact](https://croccake.com/contact) : coordonnées et formulaire
+- [Animaleries](https://croccake.com/animaleries) : devenir détaillant partenaire
+- [Politique de confidentialité](https://croccake.com/confidentialite) : conforme à la Loi 25 (Québec) — aucun cookie ni traceur sur ce site
