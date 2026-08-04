@@ -1,0 +1,55 @@
+# Publie la version PRODUCTION du site (domaine croccake.com) sur la
+# branche gh-pages, en remplaçant la prévisualisation.
+#
+# ⚠️ NE PAS DÉCLENCHER avant que le DNS de croccake.com pointe vers GitHub
+# Pages (voir DEPLOIEMENT-DOMAINE.md). Ce workflow :
+#   1. Ajoute un fichier CNAME contenant "croccake.com" — dès qu'il est
+#      poussé, GitHub configure le domaine personnalisé et se met à
+#      REDIRIGER https://blackdorvelus-star.github.io/croc-cake/ vers
+#      https://croccake.com. Si le DNS n'est pas encore basculé à ce
+#      moment-là, le lien de démo actuel casse (redirection vers l'ancien
+#      site owebo).
+#   2. Construit le site SANS le préfixe /croc-cake/ (chemins racine, tels
+#      que le code les produit nativement pour croccake.com).
+#
+# Déclenchement : manuel uniquement (workflow_dispatch), depuis l'onglet
+# Actions → « Mise en production (domaine croccake.com) » → Run workflow.
+name: Mise en production (domaine croccake.com)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-branch
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Domaine personnalisé (fichier CNAME)
+        run: echo "croccake.com" > dist/CNAME
+      - name: Désactiver Jekyll (sert les dossiers _astro)
+        run: touch dist/.nojekyll
+      - name: Publier sur la branche gh-pages
+        run: |
+          cd dist
+          git init -q
+          git checkout -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Mise en production croccake.com — ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
