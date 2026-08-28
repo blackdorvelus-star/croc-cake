@@ -40,6 +40,8 @@ DataHandler --MarketEvent--> Portfolio.update_timeindex + RiskManager.evaluate_p
 | `execution_handler.py` | `SlippageModel` (impact de marché en racine carrée du taux de participation, pas un chiffre fixe) + `CommissionModel` (pourcentage + minimum), puis génère le `FillEvent`. |
 | `forex_cost_models.py` | Équivalents FX : `ForexCommissionModel` (par lot standard, indépendant du prix), `ForexSlippageModel` (pips fixes, avec ajustement JPY), `ForexPositionSizer` (sizing en % du risque par trade selon la distance du stop en pips). Substituables aux modèles génériques (mêmes signatures). |
 | `engine.py` | Boucle d'événements principale + **watchdog** : lève `MarketDataStallError` si aucun `MarketEvent` n'a été traité depuis `heartbeat_timeout_seconds`. |
+| `random_baseline_strategy.py` | `RandomKillzoneEntryStrategy` : entrées à pile ou face à l'intérieur des killzones, même sortie/mêmes coûts/même sizing que les stratégies ICT — sert uniquement de référence aléatoire pour `run_thesis_validation.py`. |
+| `analytics.py` | `compute_performance_report` : win rate, profit factor, PnL moyen/trade, R moyen, max drawdown à partir des trades clôturés d'un `Portfolio`. Pur post-traitement, n'influence jamais une décision de trading. |
 
 ## Installation
 
@@ -138,6 +140,44 @@ Bref : ce backtest tourne sur de vraies données de marché, mais son
 résultat n'a aucune valeur statistique — il sert à vérifier que le
 pipeline fonctionne sur un flux réel, pas à juger la rentabilité d'une
 stratégie.
+
+### Validation de la thèse : y a-t-il un edge du tout ?
+
+```bash
+python -m backtesting_engine.examples.run_thesis_validation
+```
+
+Un backtest qui gagne de l'argent une fois ne prouve rien — il faut savoir
+si son résultat est meilleur que ce que produirait une entrée au hasard
+dans les mêmes conditions. Ce script fait un test de permutation Monte
+Carlo léger : il prend le résultat réel de chaque stratégie ICT sur les
+données EUR/USD réelles, puis lance `RandomKillzoneEntryStrategy` (entrées
+à pile ou face, mêmes killzones, mêmes coûts, même sizing par risque, seul
+le "quand entrer" change) 200 fois avec des graines différentes, calibrées
+pour produire en moyenne le même nombre de trades que la stratégie réelle.
+Si le résultat réel se situe confortablement dans la distribution
+aléatoire, son "edge" n'est pas distinguable du bruit sur ces données.
+
+**Résultat obtenu sur `data/EURUSD_H1_2020.csv` :**
+
+| Stratégie | Trades | Win rate | Profit factor | PnL total | P(aléatoire ≥ réel) | Conclusion |
+|---|---|---|---|---|---|---|
+| `ICTKillzoneStrategy` | 13 | 30.8% | 0.44 | -2083.29 | 0.340 | non distinguable du hasard |
+| `ICT2022Strategy` | 1 | 0% | 0.00 | -205.72 | 0.870 | non distinguable du hasard (1 seul trade) |
+
+Les deux stratégies perdent de l'argent sur cette période, **et** aucune
+des deux ne bat l'entrée aléatoire de façon statistiquement notable (34%
+et 87% des tirages aléatoires font aussi bien ou mieux). Le coupe-circuit
+de drawdown du `RiskManager` s'est déclenché sur `ICTKillzoneStrategy`.
+C'est la réponse honnête à "trouve la thèse qu'il te faut" : sur ces
+données (4 mois de H1, régime COVID atypique), **ni la mécanique ICT
+simple ni la version 2022 ne montrent un edge mesurable** — leur logique
+d'entrée ne fait pas mieux que le hasard une fois les coûts et le sizing
+par risque appliqués. Ne pas y voir une preuve que ICT ne fonctionne
+jamais : l'échantillon est bien trop petit (13 et 1 trades) pour trancher
+dans un sens ou dans l'autre — c'est un résultat inconclusif, pas un
+verdict négatif définitif. Il faudrait au minimum des années de données
+1-minute et plusieurs centaines de trades pour espérer une réponse fiable.
 
 ### Sizing par risque (Forex)
 

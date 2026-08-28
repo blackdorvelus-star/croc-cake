@@ -3,6 +3,7 @@
 See README.md in this directory for architecture notes and usage. Public
 API is re-exported here for convenience.
 """
+from .analytics import PerformanceReport, compute_performance_report
 from .data_handler import DataHandler, HistoricCSVDataHandler
 from .engine import Backtest, MarketDataStallError
 from .event import (
@@ -22,7 +23,8 @@ from .forex_cost_models import ForexCommissionModel, ForexPositionSizer, ForexSl
 from .ict_2022_strategy import FractalSwingDetector, ICT2022Strategy
 from .ict_strategy import DEFAULT_KILLZONES, ICTKillzoneStrategy, Killzone, KillzoneFilter
 from .ml_model import DummyXGBoostSignalModel
-from .portfolio import Portfolio, PositionSizer
+from .portfolio import Portfolio, PositionSizer, TradeRecord
+from .random_baseline_strategy import RandomKillzoneEntryStrategy
 from .risk_manager import RiskManager
 from .strategy import MLMomentumStrategy, Strategy
 
@@ -52,6 +54,10 @@ __all__ = [
     "DummyXGBoostSignalModel",
     "Portfolio",
     "PositionSizer",
+    "TradeRecord",
+    "PerformanceReport",
+    "compute_performance_report",
+    "RandomKillzoneEntryStrategy",
     "RiskManager",
     "CommissionModel",
     "ExecutionHandler",

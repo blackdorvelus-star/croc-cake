@@ -28,6 +28,28 @@ class EquityPoint:
     equity: float
 
 
+@dataclass
+class _OpenTrade:
+    direction: OrderDirection  # BUY = long trade, SELL = short trade
+    quantity: int
+    entry_price: float
+    commission: float
+
+
+@dataclass
+class TradeRecord:
+    """A fully closed round-trip trade, for post-hoc performance analysis
+    (see `analytics.py`). Not used by any live decision in the engine."""
+
+    symbol: str
+    direction: OrderDirection
+    quantity: int
+    entry_price: float
+    exit_price: float
+    commission: float
+    pnl: float
+
+
 @runtime_checkable
 class PositionSizer(Protocol):
     """Minimal structural interface for a risk-based position sizer
@@ -73,6 +95,9 @@ class Portfolio:
         self.positions: Dict[str, int] = {symbol: 0 for symbol in symbol_list}
         self.latest_prices: Dict[str, float] = {symbol: 0.0 for symbol in symbol_list}
         self.equity_curve: List[EquityPoint] = []
+
+        self._open_trades: Dict[str, _OpenTrade] = {}
+        self.closed_trades: List[TradeRecord] = []
 
     @property
     def current_equity(self) -> float:
@@ -121,9 +146,64 @@ class Portfolio:
         return None
 
     def update_fill(self, event: FillEvent) -> None:
+        symbol = event.symbol
+        previous_position = self.positions[symbol]
         signed_quantity = event.quantity if event.direction == OrderDirection.BUY else -event.quantity
-        self.positions[event.symbol] += signed_quantity
+        self.positions[symbol] = previous_position + signed_quantity
         self.cash += -signed_quantity * event.fill_price - event.commission
+
+        self._record_trade_activity(symbol, event, previous_position, signed_quantity)
+
+    def _record_trade_activity(
+        self, symbol: str, event: FillEvent, previous_position: int, signed_quantity: int
+    ) -> None:
+        """Reconstructs round-trip trades from the fill stream, for
+        analytics only -- this never influences sizing or risk decisions.
+        A single fill can both close an existing position and open a new
+        one in the opposite direction (a "flip"), so its commission is
+        prorated between the closing and opening portions by quantity.
+        """
+        is_reducing = previous_position != 0 and (previous_position > 0) != (signed_quantity > 0)
+        closing_quantity = min(abs(previous_position), abs(signed_quantity)) if is_reducing else 0
+
+        if closing_quantity > 0:
+            open_trade = self._open_trades.get(symbol)
+            if open_trade is not None:
+                closing_commission = event.commission * (closing_quantity / event.quantity)
+                entry_commission = open_trade.commission * (closing_quantity / open_trade.quantity)
+                direction_sign = 1 if open_trade.direction == OrderDirection.BUY else -1
+                pnl = (
+                    direction_sign * (event.fill_price - open_trade.entry_price) * closing_quantity
+                    - entry_commission
+                    - closing_commission
+                )
+                self.closed_trades.append(
+                    TradeRecord(
+                        symbol=symbol,
+                        direction=open_trade.direction,
+                        quantity=closing_quantity,
+                        entry_price=open_trade.entry_price,
+                        exit_price=event.fill_price,
+                        commission=entry_commission + closing_commission,
+                        pnl=pnl,
+                    )
+                )
+                remaining = open_trade.quantity - closing_quantity
+                if remaining <= 0:
+                    del self._open_trades[symbol]
+                else:
+                    open_trade.quantity = remaining
+                    open_trade.commission -= entry_commission
+
+        opening_quantity = event.quantity - closing_quantity
+        if opening_quantity > 0:
+            opening_commission = event.commission * (opening_quantity / event.quantity)
+            self._open_trades[symbol] = _OpenTrade(
+                direction=event.direction,
+                quantity=opening_quantity,
+                entry_price=event.fill_price,
+                commission=opening_commission,
+            )
 
     def generate_liquidation_orders(self) -> List[OrderEvent]:
         """Build MARKET orders that flatten every currently open position.
