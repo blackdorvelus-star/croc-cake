@@ -280,6 +280,51 @@ le piège que je m'étais engagé à éviter. Ce que ça justifie : creuser
 sur d'autres folds/périodes avant de lui faire confiance — pas l'adopter
 telle quelle.
 
+#### Réplication sur 5 fenêtres indépendantes : le résultat ne tient pas
+
+```bash
+python -m backtesting_engine.examples.run_replication_check
+```
+
+Les deux configurations trouvées ci-dessus (biais HTF seul sur
+`ICT2022Strategy`, ADX<25 seul sur `ICTKillzoneStrategy`) ont été rejouées
+**telles quelles, sans aucun réajustement**, sur 5 fenêtres de ~4 ans
+indépendantes couvrant les 20 ans (2004-2007, 2008-2011, 2012-2015,
+2016-2019, 2020-2024), comparées à la même stratégie sans filtre sur
+chaque fenêtre.
+
+En ne comptant que le PnL total, le filtre "bat" sa baseline 3 fois sur 5
+(2022 + biais HTF) et 4 fois sur 5 (Killzone + ADX). Mais ce chiffre est
+trompeur : **un filtre qui trade moins souvent perd mécaniquement moins**
+quand l'espérance de base est négative, indépendamment de toute vraie
+valeur du filtre. La bonne comparaison est le **PnL moyen par trade (R)**,
+qui neutralise cet effet :
+
+| Fenêtre | Killzone baseline (avg R) | Killzone + ADX<25 (avg R) | 2022 baseline (avg R) | 2022 + biais HTF (avg R) |
+|---|---|---|---|---|
+| 2004-2007 | -0.01 | +0.00 | -1.02 | -0.59 |
+| 2008-2011 | -0.10 | **+0.01** | **+0.05** | **-0.02** |
+| 2012-2015 | -0.03 | **-0.19** | -4.35 (2 trades, peu fiable) | -0.37 |
+| 2016-2019 | -0.10 | **-0.24** | -0.26 | **+0.27** |
+| 2020-2024 | -0.21 | **-0.42** | -0.04 | -0.00 |
+
+Sur cette base par trade : le filtre ADX **dégrade** la qualité moyenne
+des trades sur 3 des 5 fenêtres (2012-2015, 2016-2019, 2020-2024) — le
+"gain" en PnL total observé plus haut vient surtout du fait qu'il trade
+beaucoup moins (parfois 5-11 trades contre 79-189), pas d'une vraie
+amélioration du edge. Le biais HTF sur `ICT2022Strategy` est plus mitigé
+mais tout aussi peu concluant : il **aggrave** la seule fenêtre où la
+baseline était réellement profitable (2008-2011, +0.05 → -0.02), et
+n'améliore clairement les choses que sur 2 des 5 fenêtres.
+
+**Conclusion** : aucun des deux filtres ne se réplique de façon fiable.
+Le résultat positif isolé trouvé dans le walk-forward initial était très
+probablement du bruit (et en partie un artefact de comptage — moins de
+trades, moins de perte totale, sans amélioration réelle par trade). Sur
+20 ans de données réelles EUR/USD, avec un protocole qui a spécifiquement
+cherché — sans tricher — un moyen de rendre ces stratégies rentables,
+aucun n'a été trouvé.
+
 ### Sizing par risque (Forex)
 
 `ForexPositionSizer` calcule une taille de position en lots à partir d'un
