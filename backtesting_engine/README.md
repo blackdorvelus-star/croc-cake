@@ -1,0 +1,80 @@
+# Event-Driven ML Backtesting Engine
+
+Squelette de moteur de backtesting **event-driven** (pas de calcul vectorisé
+type `df['signal'] * df['returns']`) pensé pour des stratégies pilotées par
+un modèle de Machine Learning, avec gestion des risques stricte et un
+modèle de coûts de transaction réaliste.
+
+## Architecture
+
+Tous les composants communiquent uniquement via une file d'événements
+(`queue.Queue`) — aucun ne s'appelle directement, ce qui les rend
+testables et remplaçables indépendamment.
+
+```
+DataHandler --MarketEvent--> Portfolio.update_timeindex + RiskManager.evaluate_portfolio_risk
+                                            |
+                                            v
+                              (breach?) --> LiquidateEvent --> flatten all positions
+                                            |
+                                            v
+                                       Strategy (ML) --SignalEvent--> Portfolio.update_signal
+                                            |
+                                            v
+                                      OrderEvent --> RiskManager.process_order (middleware)
+                                            |
+                                    (approved) v
+                                      ExecutionHandler --FillEvent--> Portfolio.update_fill
+```
+
+| Fichier | Responsabilité |
+|---|---|
+| `event.py` | Tous les types d'événements (`MarketEvent`, `SignalEvent`, `OrderEvent`, `FillEvent`, `LiquidateEvent`). |
+| `data_handler.py` | Alimente la file en `MarketEvent`. `HistoricCSVDataHandler` rejoue des DataFrames pandas ; à remplacer par un flux live sans toucher au reste. |
+| `ml_model.py` | `DummyXGBoostSignalModel` : wrapper autour d'un `xgboost.XGBClassifier` (fallback pur Python si `xgboost` est absent), démonstratif uniquement. |
+| `strategy.py` | `MLMomentumStrategy` : construit des features glissantes et interroge le modèle ML **de façon asynchrone** (tous les N barres, une fois l'historique suffisant) pour émettre des `SignalEvent`. |
+| `portfolio.py` | Positions, cash, equity mark-to-market, sizing des ordres, ordres de liquidation totale. |
+| `risk_manager.py` | Middleware **entre** la création de l'`OrderEvent` et l'`ExecutionHandler`. Deux coupe-circuits : rate limiter (ordres/minute) et hard drawdown limit (2% depuis l'ouverture) qui émet un `LiquidateEvent`. |
+| `execution_handler.py` | `SlippageModel` (impact de marché en racine carrée du taux de participation, pas un chiffre fixe) + `CommissionModel` (pourcentage + minimum), puis génère le `FillEvent`. |
+| `engine.py` | Boucle d'événements principale + **watchdog** : lève `MarketDataStallError` si aucun `MarketEvent` n'a été traité depuis `heartbeat_timeout_seconds`. |
+
+## Installation
+
+```bash
+pip install -r backtesting_engine/requirements.txt
+```
+
+`xgboost` est optionnel : s'il n'est pas installé, `ml_model.py` bascule
+automatiquement sur un modèle de repli déterministe exposant la même
+interface (`predict_proba`), pour que le reste du code n'ait jamais à le
+savoir.
+
+## Lancer la démo
+
+```bash
+python -m backtesting_engine.examples.run_backtest
+```
+
+Le script génère des données OHLCV synthétiques (avec un choc de prix
+injecté) et fait tourner le pipeline complet de bout en bout. Il enchaîne
+ensuite avec une démonstration déterministe du coupe-circuit de drawdown du
+`RiskManager` (le déclenchement pendant le backtest ML dépend de la
+position — stochastique — tenue par le modèle factice au moment du choc).
+
+## Tests
+
+```bash
+python -m unittest discover -s backtesting_engine/tests -v
+```
+
+## Points d'extension
+
+- **Données réelles** : implémenter une nouvelle sous-classe de
+  `DataHandler` (broker API, websocket, base de données) qui pousse des
+  `MarketEvent` — aucune autre classe n'a besoin de changer.
+- **Modèle ML réel** : remplacer `DummyXGBoostSignalModel` par un modèle
+  entraîné et validé en walk-forward, sérialisé sur disque.
+- **Sizing avancé** : remplacer la logique fixe de `Portfolio.update_signal`
+  par du sizing par volatilité, Kelly, etc.
+- **Exécution réelle** : implémenter une sous-classe d'`ExecutionHandler`
+  qui envoie de vrais ordres à un broker (paper ou live).
