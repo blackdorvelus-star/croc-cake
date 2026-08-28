@@ -94,6 +94,51 @@ FX.
 > son critère de "retour dans la zone" restent des simplifications d'un
 > concept discrétionnaire — pas une garantie d'edge.
 
+### Backtest sur données réelles
+
+```bash
+python -m backtesting_engine.examples.run_real_eurusd_backtest              # ICT2022Strategy
+python -m backtesting_engine.examples.run_real_eurusd_backtest --strategy killzone
+```
+
+Contrairement à tous les autres exemples (données synthétiques), celui-ci
+charge de vraies barres EUR/USD historiques : `data/EURUSD_H1_2020.csv`,
+1994 barres horaires (bid OHLC), du 2020-01-02 au 2020-04-24 — période qui
+couvre le crash COVID de mars 2020.
+
+**Provenance et limites, à connaître avant d'interpréter un résultat :**
+- Cet environnement n'a pas d'accès réseau vers les fournisseurs de
+  données financières habituels (Yahoo Finance, Alpha Vantage, Stooq,
+  histdata.com sont bloqués par la politique réseau du sandbox). Seul
+  `raw.githubusercontent.com` était joignable ; ce fichier vient donc d'un
+  dépôt GitHub public tiers ([`ZTeste/Trady`](https://github.com/ZTeste/Trady)),
+  pas d'un vendeur de données financières habituel — origine invérifiable
+  au-delà de la cohérence interne des chiffres (pas de barre le samedi,
+  seulement quelques barres le dimanche soir : cohérent avec un calendrier
+  FX réel, format de colonnes typique d'un export ForexConnect/FXCM).
+- **Granularité horaire (H1), pas 1-minute** : les stratégies ICT sont
+  conçues pour de l'intraday fin ; sur H1 les killzones (fenêtres de
+  quelques heures) ne contiennent que 2-4 barres chacune, ce qui réduit
+  mécaniquement le nombre de setups détectables.
+- **~4 mois seulement** — bien trop court pour une validation statistique,
+  et une fenêtre dominée par un régime de marché atypique (le crash COVID).
+- **Fuseau horaire de la source non documenté** : supposé UTC dans le
+  script (`SOURCE_TIMEZONE_ASSUMPTION`), converti en heure de New York via
+  `reference_timezone="America/New_York"` (conversion DST-aware par
+  `zoneinfo`, importante puisque la période traverse le changement
+  d'heure US du 8 mars 2020). Si cette hypothèse est fausse, les killzones
+  ne correspondent pas aux vraies heures de session — à vérifier avant de
+  tirer une conclusion des résultats.
+- Prix **bid uniquement** (colonnes `askhigh`/`asklow` disponibles dans le
+  fichier mais non utilisées) : le spread réel n'est pas modélisé
+  explicitement, seul `ForexSlippageModel`/`ForexCommissionModel`
+  l'approxime.
+
+Bref : ce backtest tourne sur de vraies données de marché, mais son
+résultat n'a aucune valeur statistique — il sert à vérifier que le
+pipeline fonctionne sur un flux réel, pas à juger la rentabilité d'une
+stratégie.
+
 ### Sizing par risque (Forex)
 
 `ForexPositionSizer` calcule une taille de position en lots à partir d'un
