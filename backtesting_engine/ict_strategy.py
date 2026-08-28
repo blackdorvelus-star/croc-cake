@@ -35,8 +35,12 @@ from datetime import datetime, time as dt_time
 from enum import Enum
 from typing import Deque, Dict, List, Optional, Sequence, Tuple
 
+from .entry_filters import passes_entry_filters
 from .event import MarketEvent, SignalDirection, SignalEvent
+from .htf_bias import DailyBiasFilter
+from .indicators import ADXIndicator
 from .strategy import Strategy
+from .trade_management import TakeProfitManager
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +134,10 @@ class ICTKillzoneStrategy(Strategy):
         mss_confirmation_bars: int = 5,
         reference_timezone: Optional[str] = None,
         pip_value: float = 0.0001,
+        htf_bias_filter: Optional[DailyBiasFilter] = None,
+        adx_filter: Optional[ADXIndicator] = None,
+        max_adx_for_entry: Optional[float] = None,
+        reward_risk_ratio: Optional[float] = None,
     ) -> None:
         if swing_lookback < 2:
             raise ValueError("swing_lookback must be at least 2")
@@ -137,6 +145,8 @@ class ICTKillzoneStrategy(Strategy):
             raise ValueError("mss_confirmation_bars must be at least 1")
         if pip_value <= 0:
             raise ValueError("pip_value must be positive")
+        if max_adx_for_entry is not None and adx_filter is None:
+            raise ValueError("max_adx_for_entry requires an adx_filter")
 
         self.symbol_list = symbol_list
         self.event_queue = event_queue
@@ -146,6 +156,15 @@ class ICTKillzoneStrategy(Strategy):
         # Pip size for stop_loss_pips computation only (0.01 for JPY pairs,
         # 0.0001 otherwise) -- sweep/MSS detection itself is price-agnostic.
         self.pip_value = pip_value
+        # Optional entry filters (all off by default -- identical behavior
+        # to before their introduction unless explicitly configured):
+        # trade only with the higher-timeframe trend, only in a
+        # non-trending (low ADX) regime, and/or exit at a fixed R multiple
+        # in addition to the existing invalidation/killzone-end exits.
+        self.htf_bias_filter = htf_bias_filter
+        self.adx_filter = adx_filter
+        self.max_adx_for_entry = max_adx_for_entry
+        self._take_profit_manager = TakeProfitManager(reward_risk_ratio) if reward_risk_ratio else None
 
         self._history: Dict[str, Deque[dict]] = {
             symbol: deque(maxlen=swing_lookback + 1) for symbol in symbol_list
@@ -193,9 +212,14 @@ class ICTKillzoneStrategy(Strategy):
             )
         return None
 
-    def _emit(self, symbol: str, direction: SignalDirection, stop_loss_pips: Optional[float] = None) -> None:
+    def _passes_entry_filters(self, direction: SignalDirection) -> bool:
+        return passes_entry_filters(direction, self.htf_bias_filter, self.adx_filter, self.max_adx_for_entry)
+
+    def _emit(self, symbol: str, direction: SignalDirection, stop_loss_pips: Optional[float] = None) -> bool:
         if self._current_position[symbol] == direction:
-            return
+            return False
+        if self._take_profit_manager is not None:
+            self._take_profit_manager.clear(symbol)
         self._current_position[symbol] = direction
         self.event_queue.put(
             SignalEvent(
@@ -206,6 +230,7 @@ class ICTKillzoneStrategy(Strategy):
                 stop_loss_pips=stop_loss_pips,
             )
         )
+        return True
 
     def calculate_signals(self, event: MarketEvent) -> None:
         symbol = event.symbol
@@ -214,6 +239,15 @@ class ICTKillzoneStrategy(Strategy):
 
         bar = event.bar
         self._history[symbol].append(bar)
+        if self.htf_bias_filter is not None:
+            self.htf_bias_filter.update(bar)
+        if self.adx_filter is not None:
+            self.adx_filter.update(bar)
+
+        if self._take_profit_manager is not None and self._take_profit_manager.check_target_hit(symbol, bar):
+            self._emit(symbol, SignalDirection.EXIT)
+            return
+
         in_killzone = self._killzone_filter.contains(bar.get("timestamp"))
         pending = self._pending_setup[symbol]
 
@@ -231,17 +265,22 @@ class ICTKillzoneStrategy(Strategy):
 
                 if confirmed:
                     self._pending_setup[symbol] = None
-                    if in_killzone:
-                        direction = (
-                            SignalDirection.LONG
-                            if pending.direction == SweepDirection.BULLISH
-                            else SignalDirection.SHORT
-                        )
+                    direction = (
+                        SignalDirection.LONG
+                        if pending.direction == SweepDirection.BULLISH
+                        else SignalDirection.SHORT
+                    )
+                    if in_killzone and self._passes_entry_filters(direction):
                         # The sweep extreme is the natural ICT invalidation
                         # level for this trade -- its distance from the
                         # entry price doubles as the stop-loss in pips.
-                        stop_loss_pips = abs(bar["close"] - pending.invalidation_level) / self.pip_value
-                        self._emit(symbol, direction, stop_loss_pips=stop_loss_pips)
+                        entry_price = bar["close"]
+                        stop_loss_pips = abs(entry_price - pending.invalidation_level) / self.pip_value
+                        emitted = self._emit(symbol, direction, stop_loss_pips=stop_loss_pips)
+                        if emitted and self._take_profit_manager is not None:
+                            self._take_profit_manager.register_entry(
+                                symbol, direction, entry_price=entry_price, invalidation_level=pending.invalidation_level
+                            )
                     return
 
                 pending.bars_remaining -= 1

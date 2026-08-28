@@ -7,7 +7,9 @@ import unittest
 from datetime import datetime
 
 from backtesting_engine.event import MarketEvent, SignalDirection
+from backtesting_engine.htf_bias import Bias, DailyBiasFilter
 from backtesting_engine.ict_2022_strategy import FractalSwingDetector, ICT2022Strategy
+from backtesting_engine.indicators import ADXIndicator
 
 
 def _bar(high: float, low: float, close: float, ts: datetime, volume: float = 1_000.0) -> dict:
@@ -141,6 +143,75 @@ class ICT2022StrategyTests(unittest.TestCase):
         strategy.calculate_signals(MarketEvent(symbol, _bar(103, 97, 98, IN_KILLZONE)))
 
         self.assertTrue(event_queue.empty())
+
+
+def _run_full_bullish_setup(strategy: ICT2022Strategy, symbol: str = "EURUSD") -> None:
+    """Replays the full sweep -> MSS -> FVG -> entry-trigger sequence from
+    test_full_happy_path_emits_long_signal_with_stop_loss_pips: entry
+    price 98, invalidation 85 (the sweep low)."""
+    _feed_confirmed_swing_range(strategy, symbol)
+    strategy.calculate_signals(MarketEvent(symbol, _bar(95, 85, 92, IN_KILLZONE)))  # sweep
+    strategy.calculate_signals(MarketEvent(symbol, _bar(101, 98, 100, IN_KILLZONE)))  # not yet MSS
+    strategy.calculate_signals(MarketEvent(symbol, _bar(116, 99, 115, IN_KILLZONE)))  # MSS + FVG formed
+    strategy.calculate_signals(MarketEvent(symbol, _bar(110, 105, 108, IN_KILLZONE)))  # price away from zone
+    strategy.calculate_signals(MarketEvent(symbol, _bar(103, 97, 98, IN_KILLZONE)))  # fills the zone -> entry
+
+
+class ICT2022StrategyFilterTests(unittest.TestCase):
+    def test_htf_bias_filter_blocks_a_setup_against_the_trend(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        bias_filter = DailyBiasFilter(ema_period=5)
+        bias_filter.bias = Bias.BEARISH
+        strategy = ICT2022Strategy(symbol_list=["EURUSD"], event_queue=event_queue, htf_bias_filter=bias_filter)
+        _run_full_bullish_setup(strategy)
+        self.assertTrue(event_queue.empty())
+
+    def test_htf_bias_filter_allows_a_setup_with_the_trend(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        bias_filter = DailyBiasFilter(ema_period=5)
+        bias_filter.bias = Bias.BULLISH
+        strategy = ICT2022Strategy(symbol_list=["EURUSD"], event_queue=event_queue, htf_bias_filter=bias_filter)
+        _run_full_bullish_setup(strategy)
+        self.assertFalse(event_queue.empty())
+        self.assertEqual(event_queue.get_nowait().direction, SignalDirection.LONG)
+
+    def test_adx_filter_blocks_entry_above_threshold(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        adx_filter = ADXIndicator(period=14)
+        adx_filter.value = 40.0
+        strategy = ICT2022Strategy(
+            symbol_list=["EURUSD"], event_queue=event_queue, adx_filter=adx_filter, max_adx_for_entry=25.0
+        )
+        _run_full_bullish_setup(strategy)
+        self.assertTrue(event_queue.empty())
+
+    def test_adx_filter_allows_entry_below_threshold(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        adx_filter = ADXIndicator(period=14)
+        adx_filter.value = 15.0
+        strategy = ICT2022Strategy(
+            symbol_list=["EURUSD"], event_queue=event_queue, adx_filter=adx_filter, max_adx_for_entry=25.0
+        )
+        _run_full_bullish_setup(strategy)
+        self.assertFalse(event_queue.empty())
+
+    def test_max_adx_for_entry_requires_an_adx_filter(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        with self.assertRaises(ValueError):
+            ICT2022Strategy(symbol_list=["EURUSD"], event_queue=event_queue, max_adx_for_entry=25.0)
+
+    def test_take_profit_hit_emits_exit_at_reward_risk_target(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        strategy = ICT2022Strategy(symbol_list=["EURUSD"], event_queue=event_queue, reward_risk_ratio=2.0)
+        _run_full_bullish_setup(strategy)
+        entry_signal = event_queue.get_nowait()
+        self.assertEqual(entry_signal.direction, SignalDirection.LONG)
+        # entry=98, invalidation=85 -> stop=13 -> target = 98 + 2*13 = 124
+        strategy.calculate_signals(MarketEvent("EURUSD", _bar(120, 118, 119, IN_KILLZONE)))
+        self.assertTrue(event_queue.empty())
+        strategy.calculate_signals(MarketEvent("EURUSD", _bar(125, 123, 124, IN_KILLZONE)))
+        self.assertFalse(event_queue.empty())
+        self.assertEqual(event_queue.get_nowait().direction, SignalDirection.EXIT)
 
 
 if __name__ == "__main__":

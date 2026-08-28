@@ -42,7 +42,11 @@ DataHandler --MarketEvent--> Portfolio.update_timeindex + RiskManager.evaluate_p
 | `engine.py` | Boucle d'événements principale + **watchdog** : lève `MarketDataStallError` si aucun `MarketEvent` n'a été traité depuis `heartbeat_timeout_seconds`. |
 | `random_baseline_strategy.py` | `RandomKillzoneEntryStrategy` : entrées à pile ou face à l'intérieur des killzones, même sortie/mêmes coûts/même sizing que les stratégies ICT — sert uniquement de référence aléatoire pour `run_thesis_validation.py`. |
 | `analytics.py` | `compute_performance_report` : win rate, profit factor, PnL moyen/trade, R moyen, max drawdown à partir des trades clôturés d'un `Portfolio`. Pur post-traitement, n'influence jamais une décision de trading. |
-| `examples/real_data.py` | Chargement/nettoyage des trois jeux de données EUR/USD réels bundlés (`data/*.csv`), partagé par `run_real_eurusd_backtest.py` et `run_thesis_validation.py`. |
+| `examples/real_data.py` | Chargement/nettoyage des trois jeux de données EUR/USD réels bundlés (`data/*.csv`), partagé par `run_real_eurusd_backtest.py`, `run_thesis_validation.py` et `run_walk_forward_validation.py`. |
+| `indicators.py` | `ADXIndicator` : ADX de Wilder calculé de façon incrémentale, bougie par bougie. |
+| `htf_bias.py` | `DailyBiasFilter` : biais directionnel daily (clôture vs EMA), calculé uniquement à partir des jours **déjà clôturés** — jamais de la journée en cours (pas de fuite de données). |
+| `trade_management.py` | `TakeProfitManager` : take-profit à un multiple R fixe de la distance du stop, en plus des sorties existantes (invalidation, fin de killzone). |
+| `entry_filters.py` | `passes_entry_filters` : logique de filtre d'entrée partagée entre `ICTKillzoneStrategy` et `ICT2022Strategy` (biais HTF + régime ADX), "fail closed" tant qu'un filtre configuré n'est pas encore "chaud". |
 
 ## Installation
 
@@ -214,6 +218,67 @@ Déjà inconclusif faute de trades (13 et 1) — le résultat sur 20 ans
 ci-dessus est strictement plus fiable et le remplace comme réponse de
 référence.
 </details>
+
+### Peut-on rendre ça rentable ? Filtres documentés + validation walk-forward
+
+Suite à la question "que manque-t-il pour être rentable", trois
+améliorations **documentées** (pas choisies pour faire remonter le
+chiffre) ont été ajoutées comme filtres optionnels, désactivés par défaut :
+
+- **`DailyBiasFilter`** (`htf_bias.py`) : biais directionnel sur clôture
+  daily vs EMA — un backtest de 2600 trades SMC cité plus haut trouve que
+  les setups pris *dans le sens* du biais higher-timeframe montrent une
+  espérance positive, contrairement aux setups pris sans filtre directionnel.
+- **`TakeProfitManager`** (`trade_management.py`) : take-profit à un
+  multiple R fixe (ratio risque/récompense minimum de 1:2 recommandé dans
+  la littérature ICT) — nos stratégies n'avaient jusqu'ici aucune sortie
+  sur objectif de gain, seulement invalidation ou fin de killzone.
+- **`ADXIndicator`** (`indicators.py`) : filtre de régime — un sweep est
+  plus probablement un vrai retournement en marché non tendanciel
+  (ADX < 25) qu'en tendance déjà établie.
+
+```bash
+python -m backtesting_engine.examples.run_walk_forward_validation
+```
+
+**Protocole** (pas un simple backtest réoptimisé sur les mêmes données) :
+les 20 ans sont découpés en 2 folds glissants ; pour chaque fold, une
+petite grille (biais HTF actif/off, R:R actif/off, ADX actif/off — 8
+combinaisons, "off" partout inclus comme candidat) est évaluée **sur la
+portion d'entraînement uniquement** (score = PnL total, une config à moins
+de 10 trades ne peut jamais gagner) ; la configuration gagnante est ensuite
+rejouée **telle quelle, sans réajustement**, sur la portion de test jamais
+vue pendant la sélection — comparée à la même stratégie sans aucun filtre
+sur cette même portion de test.
+
+**Résultats (4 combinaisons stratégie × fold) :**
+
+| Stratégie | Fold | Config sélectionnée (train) | Test (config figée) | Test baseline (sans filtre) |
+|---|---|---|---|---|
+| Killzone | 1 (test 2013-2018) | ADX<25 | PF 0.52, -2068.95 (15 trades) | PF 0.53, -2290.11 (21 trades) |
+| Killzone | 2 (test 2018-2024) | R:R=2.0 | PF 0.48, -2073.53 (21 trades) | *identique* — le take-profit ne s'est jamais déclenché sur ce fold |
+| 2022 | 1 (test 2013-2018) | aucune config n'a atteint 10 trades sur train → repli sur baseline | PF 0.09, -2941.16 (7 trades) | *identique* |
+| 2022 | 2 (test 2018-2024) | biais HTF (EMA50) seul | **PF 1.18, +1396.07 (21 trades)** | PF 0.93, -952.79 (43 trades) |
+
+**Verdict honnête, sans trier les résultats qui m'arrangent** : sur 3 des
+4 combinaisons, les filtres ne rendent rien rentable — au mieux ils
+réduisent légèrement la perte (Killzone/fold 1), au pire ils ne changent
+rien (le take-profit ne s'est simplement jamais déclenché sur ces trades).
+**Une seule combinaison** (`ICT2022Strategy` + biais HTF, fold 2) passe en
+territoire positif hors échantillon, et c'est un résultat réel — la config
+a été choisie sur 2004-2017 et testée sans retouche sur 2018-2024, jamais
+vue pendant la sélection.
+
+Mais un résultat positif sur 1 test parmi 4 est exactement ce qu'on
+attendrait par pur hasard même s'il n'y avait aucun edge réel (problème
+des comparaisons multiples) — d'autant que sa sélection sur train n'a
+gagné que parce que c'était la **seule** config de la grille à dépasser le
+seuil de 10 trades ce fold-là, pas parce qu'elle dominait clairement les
+autres. Le présenter comme "la solution" serait retomber exactement dans
+le piège que je m'étais engagé à éviter. Ce que ça justifie : creuser
+*spécifiquement* cette combinaison (biais HTF seul sur `ICT2022Strategy`)
+sur d'autres folds/périodes avant de lui faire confiance — pas l'adopter
+telle quelle.
 
 ### Sizing par risque (Forex)
 

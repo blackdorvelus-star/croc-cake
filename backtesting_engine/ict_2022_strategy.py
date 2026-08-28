@@ -40,9 +40,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Deque, Dict, List, Optional, Sequence
 
+from .entry_filters import passes_entry_filters
 from .event import MarketEvent, SignalDirection, SignalEvent
+from .htf_bias import DailyBiasFilter
 from .ict_strategy import DEFAULT_KILLZONES, Killzone, KillzoneFilter
+from .indicators import ADXIndicator
 from .strategy import Strategy
+from .trade_management import TakeProfitManager
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +120,10 @@ class ICT2022Strategy(Strategy):
         max_bars_awaiting_mss: int = 10,
         max_bars_awaiting_fvg: int = 5,
         pip_value: float = 0.0001,
+        htf_bias_filter: Optional[DailyBiasFilter] = None,
+        adx_filter: Optional[ADXIndicator] = None,
+        max_adx_for_entry: Optional[float] = None,
+        reward_risk_ratio: Optional[float] = None,
     ) -> None:
         if max_bars_awaiting_mss < 1:
             raise ValueError("max_bars_awaiting_mss must be at least 1")
@@ -123,6 +131,8 @@ class ICT2022Strategy(Strategy):
             raise ValueError("max_bars_awaiting_fvg must be at least 1")
         if pip_value <= 0:
             raise ValueError("pip_value must be positive")
+        if max_adx_for_entry is not None and adx_filter is None:
+            raise ValueError("max_adx_for_entry requires an adx_filter")
 
         self.symbol_list = symbol_list
         self.event_queue = event_queue
@@ -133,6 +143,12 @@ class ICT2022Strategy(Strategy):
         self.max_bars_awaiting_mss = max_bars_awaiting_mss
         self.max_bars_awaiting_fvg = max_bars_awaiting_fvg
         self.pip_value = pip_value
+        # Optional entry filters -- see entry_filters.passes_entry_filters
+        # and trade_management.TakeProfitManager. All off by default.
+        self.htf_bias_filter = htf_bias_filter
+        self.adx_filter = adx_filter
+        self.max_adx_for_entry = max_adx_for_entry
+        self._take_profit_manager = TakeProfitManager(reward_risk_ratio) if reward_risk_ratio else None
 
         self._detectors: Dict[str, FractalSwingDetector] = {
             symbol: FractalSwingDetector() for symbol in symbol_list
@@ -191,6 +207,12 @@ class ICT2022Strategy(Strategy):
         return bar["high"] >= zone.zone_low
 
     def _emit_entry(self, symbol: str, zone: _FVGZone, invalidation_level: float, entry_price: float) -> None:
+        if self._current_position[symbol] == zone.direction:
+            return
+        if not passes_entry_filters(zone.direction, self.htf_bias_filter, self.adx_filter, self.max_adx_for_entry):
+            return
+        if self._take_profit_manager is not None:
+            self._take_profit_manager.clear(symbol)
         stop_loss_pips = abs(entry_price - invalidation_level) / self.pip_value
         self._current_position[symbol] = zone.direction
         self.event_queue.put(
@@ -202,8 +224,12 @@ class ICT2022Strategy(Strategy):
                 stop_loss_pips=stop_loss_pips,
             )
         )
+        if self._take_profit_manager is not None:
+            self._take_profit_manager.register_entry(symbol, zone.direction, entry_price, invalidation_level)
 
     def _flatten_if_needed(self, symbol: str) -> None:
+        if self._take_profit_manager is not None:
+            self._take_profit_manager.clear(symbol)
         if self._current_position[symbol] != SignalDirection.EXIT:
             self._current_position[symbol] = SignalDirection.EXIT
             self.event_queue.put(SignalEvent(symbol=symbol, direction=SignalDirection.EXIT, strategy_id="ict_2022"))
@@ -220,6 +246,14 @@ class ICT2022Strategy(Strategy):
         # inactive session (e.g. the Asian range swept by London).
         detector.update(bar)
         self._recent_bars[symbol].append(bar)
+        if self.htf_bias_filter is not None:
+            self.htf_bias_filter.update(bar)
+        if self.adx_filter is not None:
+            self.adx_filter.update(bar)
+
+        if self._take_profit_manager is not None and self._take_profit_manager.check_target_hit(symbol, bar):
+            self._flatten_if_needed(symbol)
+            return
 
         in_killzone = self._killzone_filter.contains(bar.get("timestamp"))
         if not in_killzone:

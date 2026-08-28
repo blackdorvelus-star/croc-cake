@@ -6,7 +6,9 @@ import unittest
 from datetime import datetime, time as dt_time
 
 from backtesting_engine.event import MarketEvent, SignalDirection
+from backtesting_engine.htf_bias import Bias, DailyBiasFilter
 from backtesting_engine.ict_strategy import ICTKillzoneStrategy, Killzone
+from backtesting_engine.indicators import ADXIndicator
 
 
 class KillzoneTests(unittest.TestCase):
@@ -121,6 +123,96 @@ class ICTKillzoneStrategyTests(unittest.TestCase):
         self.assertEqual(event_queue.get_nowait().direction, SignalDirection.LONG)
 
         strategy.calculate_signals(MarketEvent(symbol, _bar(100.6, 100.7, 100.5, self.OUTSIDE_KILLZONE)))
+        self.assertEqual(event_queue.get_nowait().direction, SignalDirection.EXIT)
+
+
+class ICTKillzoneStrategyFilterTests(unittest.TestCase):
+    """Tests for the optional htf_bias_filter / adx_filter / reward_risk_ratio
+    entry filters -- all off by default, so these construct strategies with
+    them explicitly configured."""
+
+    IN_KILLZONE = ICTKillzoneStrategyTests.IN_KILLZONE
+
+    def _run_bullish_sweep_and_mss(self, strategy, symbol: str = "AAPL") -> "queue.Queue":
+        for price in (100.0, 100.5, 99.9):
+            strategy.calculate_signals(MarketEvent(symbol, _bar(price, price + 0.1, price - 0.1, self.IN_KILLZONE)))
+        strategy.calculate_signals(MarketEvent(symbol, _bar(100.0, 100.1, 99.7, self.IN_KILLZONE)))
+        strategy.calculate_signals(MarketEvent(symbol, _bar(100.65, 100.7, 100.4, self.IN_KILLZONE)))
+
+    def test_htf_bias_filter_blocks_a_setup_against_the_trend(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        bias_filter = DailyBiasFilter(ema_period=5)
+        bias_filter.bias = Bias.BEARISH  # opposes the bullish sweep below
+        strategy = ICTKillzoneStrategy(
+            symbol_list=["AAPL"], event_queue=event_queue, swing_lookback=3, mss_confirmation_bars=3,
+            htf_bias_filter=bias_filter,
+        )
+        self._run_bullish_sweep_and_mss(strategy)
+        self.assertTrue(event_queue.empty())
+
+    def test_htf_bias_filter_allows_a_setup_with_the_trend(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        bias_filter = DailyBiasFilter(ema_period=5)
+        bias_filter.bias = Bias.BULLISH  # agrees with the bullish sweep below
+        strategy = ICTKillzoneStrategy(
+            symbol_list=["AAPL"], event_queue=event_queue, swing_lookback=3, mss_confirmation_bars=3,
+            htf_bias_filter=bias_filter,
+        )
+        self._run_bullish_sweep_and_mss(strategy)
+        self.assertFalse(event_queue.empty())
+        self.assertEqual(event_queue.get_nowait().direction, SignalDirection.LONG)
+
+    def test_no_bias_yet_blocks_entry_fail_closed(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        bias_filter = DailyBiasFilter(ema_period=5)  # .bias stays None: never warmed up
+        strategy = ICTKillzoneStrategy(
+            symbol_list=["AAPL"], event_queue=event_queue, swing_lookback=3, mss_confirmation_bars=3,
+            htf_bias_filter=bias_filter,
+        )
+        self._run_bullish_sweep_and_mss(strategy)
+        self.assertTrue(event_queue.empty())
+
+    def test_adx_filter_blocks_entry_above_threshold(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        adx_filter = ADXIndicator(period=14)
+        adx_filter.value = 40.0  # strongly trending; above the threshold below
+        strategy = ICTKillzoneStrategy(
+            symbol_list=["AAPL"], event_queue=event_queue, swing_lookback=3, mss_confirmation_bars=3,
+            adx_filter=adx_filter, max_adx_for_entry=25.0,
+        )
+        self._run_bullish_sweep_and_mss(strategy)
+        self.assertTrue(event_queue.empty())
+
+    def test_adx_filter_allows_entry_below_threshold(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        adx_filter = ADXIndicator(period=14)
+        adx_filter.value = 15.0  # ranging; below the threshold below
+        strategy = ICTKillzoneStrategy(
+            symbol_list=["AAPL"], event_queue=event_queue, swing_lookback=3, mss_confirmation_bars=3,
+            adx_filter=adx_filter, max_adx_for_entry=25.0,
+        )
+        self._run_bullish_sweep_and_mss(strategy)
+        self.assertFalse(event_queue.empty())
+
+    def test_max_adx_for_entry_requires_an_adx_filter(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        with self.assertRaises(ValueError):
+            ICTKillzoneStrategy(symbol_list=["AAPL"], event_queue=event_queue, max_adx_for_entry=25.0)
+
+    def test_take_profit_hit_emits_exit_at_reward_risk_target(self) -> None:
+        event_queue: "queue.Queue" = queue.Queue()
+        strategy = ICTKillzoneStrategy(
+            symbol_list=["AAPL"], event_queue=event_queue, swing_lookback=3, mss_confirmation_bars=3,
+            reward_risk_ratio=2.0,
+        )
+        self._run_bullish_sweep_and_mss(strategy)
+        entry_signal = event_queue.get_nowait()
+        self.assertEqual(entry_signal.direction, SignalDirection.LONG)
+        # entry=100.65, invalidation=99.7 -> stop=0.95 -> target = 100.65 + 2*0.95 = 102.55
+        strategy.calculate_signals(MarketEvent("AAPL", _bar(101.0, 102.0, 100.9, self.IN_KILLZONE)))
+        self.assertTrue(event_queue.empty())  # short of target
+        strategy.calculate_signals(MarketEvent("AAPL", _bar(102.6, 102.7, 102.0, self.IN_KILLZONE)))
+        self.assertFalse(event_queue.empty())
         self.assertEqual(event_queue.get_nowait().direction, SignalDirection.EXIT)
 
 
