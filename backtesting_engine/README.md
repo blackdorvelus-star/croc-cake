@@ -43,6 +43,11 @@ DataHandler --MarketEvent--> Portfolio.update_timeindex + RiskManager.evaluate_p
 | `random_baseline_strategy.py` | `RandomKillzoneEntryStrategy` : entrées à pile ou face à l'intérieur des killzones, même sortie/mêmes coûts/même sizing que les stratégies ICT — sert uniquement de référence aléatoire pour `run_thesis_validation.py`. |
 | `analytics.py` | `compute_performance_report` : win rate, profit factor, PnL moyen/trade, R moyen, max drawdown à partir des trades clôturés d'un `Portfolio`. Pur post-traitement, n'influence jamais une décision de trading. |
 | `examples/real_data.py` | Chargement/nettoyage des trois jeux de données EUR/USD réels bundlés (`data/*.csv`), partagé par `run_real_eurusd_backtest.py`, `run_thesis_validation.py` et `run_walk_forward_validation.py`. |
+| `indicators.py` | `ADXIndicator` (régime tendance/range) et `ATRIndicator` (volatilité, pour sizer un stop), tous deux calculés de façon incrémentale, barre par barre. |
+| `htf_bias.py` | `DailyBiasFilter` : biais haussier/baissier basé sur la clôture journalière **déjà close** vs. son EMA — jamais la bougie du jour en cours (pas de biais rétroactif). |
+| `trade_management.py` | `TakeProfitManager` : take-profit à un multiple R fixe, calculé depuis le niveau d'invalidation déjà utilisé pour le stop. |
+| `entry_filters.py` | `passes_entry_filters` : logique de filtre (biais HTF, régime ADX) partagée entre `ICTKillzoneStrategy` et `ICT2022Strategy`, pour éviter que les deux dérivent. |
+| `trend_following_strategy.py` | `DonchianTrendStrategy` : breakout de canal Donchian façon Turtle Traders — mécanisme de **continuation** (pas de retournement comme ICT), stop dimensionné en multiples d'ATR, sortie sur stop initial ou cassure du canal de sortie (plus court), jamais de take-profit fixe. Aucune notion de killzone. |
 | `indicators.py` | `ADXIndicator` : ADX de Wilder calculé de façon incrémentale, bougie par bougie. |
 | `htf_bias.py` | `DailyBiasFilter` : biais directionnel daily (clôture vs EMA), calculé uniquement à partir des jours **déjà clôturés** — jamais de la journée en cours (pas de fuite de données). |
 | `trade_management.py` | `TakeProfitManager` : take-profit à un multiple R fixe de la distance du stop, en plus des sorties existantes (invalidation, fin de killzone). |
@@ -352,6 +357,78 @@ comportement d'origine (`fixed_order_quantity`) est inchangé.
 > nouvelles classes FX les remplacent uniquement au point d'usage, dans
 > la démo ICT — passez-les à `SimulatedExecutionHandler` pour vos propres
 > pipelines FX.
+
+## Piste alternative : trend-following (Donchian/Turtle)
+
+Après l'échec des filtres ICT à se répliquer (voir plus haut), recherche
+documentée sur ce que font effectivement les banques et les fonds
+systématiques professionnels plutôt que des concepts retail :
+
+- **Time series momentum / trend-following** est la thèse académique la
+  mieux établie : Moskowitz, Ooi & Pedersen (2012, *Journal of Financial
+  Economics*) documentent un momentum significatif sur 58 marchés liquides
+  (actions, devises, matières premières, obligations, 1985-2009), et le
+  trend-following représente ~60-70% des actifs gérés par les CTA
+  aujourd'hui. [Papier original (NYU Stern)](https://w4.stern.nyu.edu/facdir/lpederse/papers/TimeSeriesMomentum.pdf) · [Quantpedia](https://quantpedia.com/strategies/time-series-momentum-effect)
+- Le système le plus documenté et reproductible : les **Turtle Traders**
+  (Richard Dennis, années 1980) — breakout à 20 jours (entrée) / 10 jours
+  (sortie), stop à 2×ATR, jamais plus de 2% de risque par trade. Toujours
+  la base conceptuelle de la plupart des CTA modernes. [AlphaMaven — CTA strategies](https://alpha-maven.com/learn/cta-strategies-explained)
+- Le carry trade (emprunter la devise à taux bas, investir dans celle à
+  taux haut) est aussi une pratique bancaire réelle, mais la littérature
+  récente est claire : sa rentabilité était concentrée sur 1998-2005 et
+  n'a "plus de profitabilité persistante" depuis — et il nécessiterait des
+  données de taux d'intérêt qu'on n'a pas. Écarté. [ScienceDirect — carry trades out-of-sample](https://www.sciencedirect.com/science/article/abs/pii/S0261560624000299)
+- L'effet "turn-of-month" est solide en actions mais la littérature
+  trouvée est quasi exclusivement sur les indices actions, pas le FX —
+  pas assez de preuve spécifique pour le tester ici en confiance.
+
+`trend_following_strategy.py` implémente `DonchianTrendStrategy` : entrée
+sur cassure du plus haut/bas des N dernières barres (continuation, pas
+retournement — mécanisme opposé aux stratégies ICT), stop initial à
+`atr_stop_multiple × ATR`, sortie sur ce stop ou sur cassure du canal de
+sortie (plus court) — jamais de take-profit fixe (le trend-following vit
+de laisser courir les gagnants).
+
+```bash
+python -m backtesting_engine.examples.run_trend_following_validation
+```
+
+Teste les deux systèmes Turtle **documentés tels quels, sans aucun
+calibrage** sur nos données (System 1 : 20j/10j ; System 2 : 55j/20j ;
+ATR 20 jours), convertis en barres H1 par une simple règle de conversion
+d'unité (~24 barres H1/jour FX), pas un ajustement. Testés sur les 20 ans
+complets et sur les mêmes 5 fenêtres indépendantes que `run_replication_check.py`.
+
+**Résultat :**
+
+| Système | Échantillon complet (20 ans) | Fenêtres positives |
+|---|---|---|
+| System 1 (20j/10j) | -2019,59 (3 trades) | **1/5** (2008-2011 : +60 262,99, PF 1,61, 77 trades) |
+| System 2 (55j/20j) | -2179,56 (3 trades) | 0/5 |
+
+Le résultat sur 2008-2011 n'est pas un artefact — tailles de position
+réalistes (1,4 à 3,5 lots sur un compte $100-180k), courbe d'équity
+plausible, signature typique du trend-following (18% de trades gagnants
+mais les 5 plus gros gains représentent 85 703$ sur 60 263$ de gain net :
+peu de gagnants compensent largement des pertes coupées court). Mais
+**1 fenêtre positive sur 5 n'est pas un edge fiable** — c'est exactement
+la période de la crise financière de 2008, le genre de régime extrême où
+la littérature elle-même dit que le trend-following performe le mieux, et
+les 4 autres fenêtres perdent de l'argent.
+
+Ça pointe vers l'explication la plus probable, **documentée dans l'étude
+originale elle-même** : Moskowitz/Ooi/Pedersen testent 58 marchés
+simultanément — l'edge du trend-following est un phénomène de
+**portefeuille diversifié**, où les quelques marchés qui tendent
+fortement à un moment donné compensent les nombreux qui ne font que du
+bruit. Tester ça sur une seule paire (EUR/USD) revient à tester une
+version structurellement affaiblie de ce que font réellement les CTA —
+qui ne tradent jamais un seul instrument. La suite logique, si on veut
+aller au bout de cette piste correctement : élargir à un petit panier de
+paires diversifiées (EUR/USD, GBP/USD, USD/JPY...) plutôt que
+d'abandonner la thèse sur la base d'un test structurellement
+sous-dimensionné.
 
 ## Tests
 

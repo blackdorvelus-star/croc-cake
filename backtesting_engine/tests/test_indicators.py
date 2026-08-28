@@ -1,9 +1,36 @@
-"""Unit tests for the ADX indicator."""
+"""Unit tests for the ADX and ATR indicators."""
 from __future__ import annotations
 
 import unittest
 
-from backtesting_engine.indicators import ADXIndicator
+from backtesting_engine.indicators import ADXIndicator, ATRIndicator
+
+
+class ATRIndicatorTests(unittest.TestCase):
+    def test_no_value_before_warmup(self) -> None:
+        atr = ATRIndicator(period=5)
+        for _ in range(4):
+            atr.update({"high": 101.0, "low": 99.0, "close": 100.0})
+        self.assertIsNone(atr.value)
+
+    def test_converges_to_constant_true_range(self) -> None:
+        atr = ATRIndicator(period=3)
+        for _ in range(10):
+            atr.update({"high": 101.0, "low": 99.0, "close": 100.0})
+        self.assertAlmostEqual(atr.value, 2.0)
+
+    def test_reacts_to_a_volatility_spike(self) -> None:
+        atr = ATRIndicator(period=5)
+        for _ in range(10):
+            atr.update({"high": 101.0, "low": 99.0, "close": 100.0})
+        calm_value = atr.value
+        for _ in range(5):
+            atr.update({"high": 120.0, "low": 80.0, "close": 100.0})
+        self.assertGreater(atr.value, calm_value)
+
+    def test_rejects_invalid_period(self) -> None:
+        with self.assertRaises(ValueError):
+            ATRIndicator(period=1)
 
 
 class ADXIndicatorTests(unittest.TestCase):

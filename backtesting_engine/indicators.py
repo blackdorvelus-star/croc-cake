@@ -9,6 +9,44 @@ from __future__ import annotations
 from typing import List, Optional
 
 
+class ATRIndicator:
+    """Wilder's Average True Range, computed incrementally.
+
+    Intended use in this codebase: size a trend-following stop as a
+    multiple of ATR (`initial_stop = entry_price -/+ atr_stop_multiple *
+    ATR`) -- the standard convention used by CTA-style breakout systems
+    (e.g. the Turtle Traders' "N" unit) so the stop scales with how much
+    the instrument is actually moving rather than a fixed pip distance.
+
+    `value` is None until the indicator has warmed up (`period` bars).
+    """
+
+    def __init__(self, period: int = 20) -> None:
+        if period < 2:
+            raise ValueError("period must be at least 2")
+        self.period = period
+        self._prev_close: Optional[float] = None
+        self._tr_values: List[float] = []
+        self.value: Optional[float] = None
+
+    def update(self, bar: dict) -> None:
+        high, low, close = bar["high"], bar["low"], bar["close"]
+        true_range = (
+            high - low
+            if self._prev_close is None
+            else max(high - low, abs(high - self._prev_close), abs(low - self._prev_close))
+        )
+        self._prev_close = close
+
+        if self.value is None:
+            self._tr_values.append(true_range)
+            if len(self._tr_values) < self.period:
+                return
+            self.value = sum(self._tr_values) / self.period
+        else:
+            self.value = (self.value * (self.period - 1) + true_range) / self.period
+
+
 class ADXIndicator:
     """Wilder's Average Directional Index (ADX), computed incrementally.
 

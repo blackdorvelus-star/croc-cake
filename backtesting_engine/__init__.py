@@ -24,13 +24,14 @@ from .forex_cost_models import ForexCommissionModel, ForexPositionSizer, ForexSl
 from .htf_bias import Bias, DailyBiasFilter
 from .ict_2022_strategy import FractalSwingDetector, ICT2022Strategy
 from .ict_strategy import DEFAULT_KILLZONES, ICTKillzoneStrategy, Killzone, KillzoneFilter
-from .indicators import ADXIndicator
+from .indicators import ADXIndicator, ATRIndicator
 from .ml_model import DummyXGBoostSignalModel
 from .portfolio import Portfolio, PositionSizer, TradeRecord
 from .random_baseline_strategy import RandomKillzoneEntryStrategy
 from .risk_manager import RiskManager
 from .strategy import MLMomentumStrategy, Strategy
 from .trade_management import TakeProfitManager
+from .trend_following_strategy import DonchianTrendStrategy
 
 __all__ = [
     "Backtest",
@@ -73,6 +74,8 @@ __all__ = [
     "Bias",
     "DailyBiasFilter",
     "ADXIndicator",
+    "ATRIndicator",
     "TakeProfitManager",
     "passes_entry_filters",
+    "DonchianTrendStrategy",
 ]
