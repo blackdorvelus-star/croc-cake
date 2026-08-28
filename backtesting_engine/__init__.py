@@ -19,7 +19,8 @@ from .event import (
 )
 from .execution_handler import CommissionModel, ExecutionHandler, SimulatedExecutionHandler, SlippageModel
 from .forex_cost_models import ForexCommissionModel, ForexPositionSizer, ForexSlippageModel
-from .ict_strategy import DEFAULT_KILLZONES, ICTKillzoneStrategy, Killzone
+from .ict_2022_strategy import FractalSwingDetector, ICT2022Strategy
+from .ict_strategy import DEFAULT_KILLZONES, ICTKillzoneStrategy, Killzone, KillzoneFilter
 from .ml_model import DummyXGBoostSignalModel
 from .portfolio import Portfolio, PositionSizer
 from .risk_manager import RiskManager
@@ -43,7 +44,10 @@ __all__ = [
     "MLMomentumStrategy",
     "Strategy",
     "ICTKillzoneStrategy",
+    "ICT2022Strategy",
+    "FractalSwingDetector",
     "Killzone",
+    "KillzoneFilter",
     "DEFAULT_KILLZONES",
     "DummyXGBoostSignalModel",
     "Portfolio",

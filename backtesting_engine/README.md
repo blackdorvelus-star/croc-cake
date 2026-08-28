@@ -33,7 +33,8 @@ DataHandler --MarketEvent--> Portfolio.update_timeindex + RiskManager.evaluate_p
 | `data_handler.py` | Alimente la file en `MarketEvent`. `HistoricCSVDataHandler` rejoue des DataFrames pandas ; à remplacer par un flux live sans toucher au reste. |
 | `ml_model.py` | `DummyXGBoostSignalModel` : wrapper autour d'un `xgboost.XGBClassifier` (fallback pur Python si `xgboost` est absent), démonstratif uniquement. |
 | `strategy.py` | `MLMomentumStrategy` : construit des features glissantes et interroge le modèle ML **de façon asynchrone** (tous les N barres, une fois l'historique suffisant) pour émettre des `SignalEvent`. |
-| `ict_strategy.py` | `ICTKillzoneStrategy` : stratégie discrétionnaire "ICT" — ne trade que pendant des fenêtres horaires (`Killzone`), cherche un *liquidity sweep* (mèche au-delà d'un plus haut/bas récent puis clôture à l'intérieur), attend une confirmation de *market structure shift*, et sort en cas d'invalidation ou de fin de killzone. |
+| `ict_strategy.py` | `ICTKillzoneStrategy` : stratégie discrétionnaire "ICT" — ne trade que pendant des fenêtres horaires (`Killzone`), cherche un *liquidity sweep* (mèche au-delà d'un plus haut/bas récent puis clôture à l'intérieur), attend une confirmation de *market structure shift*, et sort en cas d'invalidation ou de fin de killzone. Expose aussi `KillzoneFilter`, partagé avec `ict_2022_strategy.py`. |
+| `ict_2022_strategy.py` | `ICT2022Strategy` : version plus stricte à 4 étapes — sweep sur swing **fractal confirmé** (`FractalSwingDetector`, 5 bougies), MSS validé par la **clôture du corps** (jamais une mèche), recherche d'un **Fair Value Gap** (imbalance 3 bougies) une fois le MSS confirmé, puis entrée en attente du retour du prix dans la zone — annulée sans condition si la killzone se termine avant. |
 | `portfolio.py` | Positions, cash, equity mark-to-market, sizing des ordres, ordres de liquidation totale. |
 | `risk_manager.py` | Middleware **entre** la création de l'`OrderEvent` et l'`ExecutionHandler`. Deux coupe-circuits : rate limiter (ordres/minute) et hard drawdown limit (2% depuis l'ouverture) qui émet un `LiquidateEvent`. |
 | `execution_handler.py` | `SlippageModel` (impact de marché en racine carrée du taux de participation, pas un chiffre fixe) + `CommissionModel` (pourcentage + minimum), puis génère le `FillEvent`. |
@@ -79,6 +80,19 @@ ML.
 > plutôt que par pivots fractals confirmés, et l'interprétation "smart
 > money" d'une mèche reste subjective. C'est une base solide et testable à
 > affiner, pas une stratégie validée ni un edge garanti.
+
+```bash
+python -m backtesting_engine.examples.run_ict_2022_backtest
+```
+
+Fait tourner `ICT2022Strategy` (le modèle 4 étapes ci-dessus) sur 10 jours
+de données 1-minute synthétiques EUR/USD, avec les mêmes modèles de coûts
+FX.
+
+> ⚠️ Même avertissement : swing fractal et MSS par clôture sont plus
+> rigoureux que la version simple, mais la détection de FVG (3 bougies) et
+> son critère de "retour dans la zone" restent des simplifications d'un
+> concept discrétionnaire — pas une garantie d'edge.
 
 ### Sizing par risque (Forex)
 

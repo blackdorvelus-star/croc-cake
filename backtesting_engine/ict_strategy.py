@@ -68,6 +68,43 @@ DEFAULT_KILLZONES: List[Killzone] = [
 """Commonly cited ICT killzones, expressed in New York (ET) local time."""
 
 
+class KillzoneFilter:
+    """Reusable killzone time-window check, shared by every ICT-style
+    strategy in this module (extracted so `ICT2022Strategy` doesn't
+    duplicate the timestamp/timezone plumbing below)."""
+
+    def __init__(
+        self,
+        killzones: Optional[Sequence[Killzone]] = None,
+        reference_timezone: Optional[str] = None,
+    ) -> None:
+        self.killzones = list(killzones) if killzones else list(DEFAULT_KILLZONES)
+        self.reference_timezone = reference_timezone
+
+    def _time_of(self, bar_timestamp: object) -> Optional[dt_time]:
+        """Best-effort extraction of a time-of-day from whatever the
+        DataHandler put in `bar['timestamp']`. Returns None for anything
+        that isn't a recognizable datetime, in which case the filter fails
+        open (see `contains`)."""
+        if isinstance(bar_timestamp, datetime):
+            moment = bar_timestamp
+            if moment.tzinfo is not None and self.reference_timezone:
+                from zoneinfo import ZoneInfo
+
+                moment = moment.astimezone(ZoneInfo(self.reference_timezone))
+            return moment.time()
+        if hasattr(bar_timestamp, "to_pydatetime"):  # pandas.Timestamp
+            return self._time_of(bar_timestamp.to_pydatetime())
+        return None
+
+    def contains(self, bar_timestamp: object) -> bool:
+        moment = self._time_of(bar_timestamp)
+        if moment is None:
+            logger.warning("Bar has no usable timestamp; killzone filter disabled for this bar.")
+            return True
+        return any(killzone.contains(moment) for killzone in self.killzones)
+
+
 class SweepDirection(Enum):
     BULLISH = "BULLISH"  # sell-side liquidity (a swing low) was swept -> bias up
     BEARISH = "BEARISH"  # buy-side liquidity (a swing high) was swept -> bias down
@@ -103,10 +140,9 @@ class ICTKillzoneStrategy(Strategy):
 
         self.symbol_list = symbol_list
         self.event_queue = event_queue
-        self.killzones = list(killzones) if killzones else list(DEFAULT_KILLZONES)
+        self._killzone_filter = KillzoneFilter(killzones, reference_timezone)
         self.swing_lookback = swing_lookback
         self.mss_confirmation_bars = mss_confirmation_bars
-        self.reference_timezone = reference_timezone
         # Pip size for stop_loss_pips computation only (0.01 for JPY pairs,
         # 0.0001 otherwise) -- sweep/MSS detection itself is price-agnostic.
         self.pip_value = pip_value
@@ -119,28 +155,13 @@ class ICTKillzoneStrategy(Strategy):
             symbol: SignalDirection.EXIT for symbol in symbol_list
         }
 
-    def _time_of(self, bar_timestamp: object) -> Optional[dt_time]:
-        """Best-effort extraction of a time-of-day from whatever the
-        DataHandler put in `bar['timestamp']`. Returns None for anything
-        that isn't a recognizable datetime, in which case killzone
-        filtering fails open (see `_in_killzone`)."""
-        if isinstance(bar_timestamp, datetime):
-            moment = bar_timestamp
-            if moment.tzinfo is not None and self.reference_timezone:
-                from zoneinfo import ZoneInfo
+    @property
+    def killzones(self) -> List[Killzone]:
+        return self._killzone_filter.killzones
 
-                moment = moment.astimezone(ZoneInfo(self.reference_timezone))
-            return moment.time()
-        if hasattr(bar_timestamp, "to_pydatetime"):  # pandas.Timestamp
-            return self._time_of(bar_timestamp.to_pydatetime())
-        return None
-
-    def _in_killzone(self, bar_timestamp: object) -> bool:
-        moment = self._time_of(bar_timestamp)
-        if moment is None:
-            logger.warning("Bar has no usable timestamp; killzone filter disabled for this bar.")
-            return True
-        return any(killzone.contains(moment) for killzone in self.killzones)
+    @property
+    def reference_timezone(self) -> Optional[str]:
+        return self._killzone_filter.reference_timezone
 
     def _swing_extremes(self, symbol: str) -> Optional[Tuple[float, float]]:
         history = list(self._history[symbol])[:-1]  # exclude the current, still-forming bar
@@ -193,7 +214,7 @@ class ICTKillzoneStrategy(Strategy):
 
         bar = event.bar
         self._history[symbol].append(bar)
-        in_killzone = self._in_killzone(bar.get("timestamp"))
+        in_killzone = self._killzone_filter.contains(bar.get("timestamp"))
         pending = self._pending_setup[symbol]
 
         if pending is not None:
