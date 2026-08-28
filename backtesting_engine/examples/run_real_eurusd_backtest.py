@@ -1,23 +1,22 @@
 """Runs an ICT strategy against *real* historical EUR/USD data.
 
 Unlike every other example in this package (which generates synthetic
-OHLCV), this one loads real hourly bid OHLC bars for EUR/USD, 2020-01-02
-through 2020-04-24 (bundled at backtesting_engine/data/EURUSD_H1_2020.csv;
-see README.md for provenance and limitations -- notably H1 granularity,
-~4 months, bid side only, source timezone unverified).
+OHLCV), this one loads a real dataset (default: hourly bid OHLC bars for
+EUR/USD, 2020-01-02 through 2020-04-24, the March 2020 COVID crash;
+bundled at backtesting_engine/data/EURUSD_H1_2020.csv). Two larger real
+datasets are also available via --dataset -- see README.md and
+real_data.py for provenance and limitations of each.
 
 Run with:
     python -m backtesting_engine.examples.run_real_eurusd_backtest
     python -m backtesting_engine.examples.run_real_eurusd_backtest --strategy killzone
+    python -m backtesting_engine.examples.run_real_eurusd_backtest --dataset 2004_2024
 """
 from __future__ import annotations
 
 import argparse
 import logging
 import queue
-from pathlib import Path
-
-import pandas as pd
 
 from backtesting_engine import (
     Backtest,
@@ -31,34 +30,26 @@ from backtesting_engine import (
     RiskManager,
     SimulatedExecutionHandler,
 )
+from backtesting_engine.examples.real_data import (
+    load_eurusd_h1_2004_2024,
+    load_eurusd_h1_2020_2023,
+    load_eurusd_h1_2020_covid,
+)
 
-DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "EURUSD_H1_2020.csv"
 PIP_VALUE = 0.0001
-
-# The source timestamps' timezone is not documented by the data's origin
-# (see README.md). Assumed UTC here -- localizing explicitly (rather than
-# leaving bars timezone-naive) lets KillzoneFilter convert to New York
-# time with correct DST handling via `reference_timezone`, instead of a
-# fixed-hour-offset guess that would silently drift across the March 2020
-# US DST change this dataset spans.
-SOURCE_TIMEZONE_ASSUMPTION = "UTC"
 KILLZONE_REFERENCE_TIMEZONE = "America/New_York"
 
-
-def load_real_eurusd_h1(path: Path = DATA_PATH) -> pd.DataFrame:
-    """Loads the bundled real historical EUR/USD H1 bid OHLC data into the
-    open/high/low/close/volume shape HistoricCSVDataHandler expects."""
-    df = pd.read_csv(path, parse_dates=["date"], index_col="date")
-    df.index = df.index.tz_localize(SOURCE_TIMEZONE_ASSUMPTION)
-    df = df.rename(
-        columns={"bidopen": "open", "bidhigh": "high", "bidlow": "low", "bidclose": "close", "tickqty": "volume"}
-    )
-    return df[["open", "high", "low", "close", "volume"]]
+DATASETS = {
+    "covid_2020": load_eurusd_h1_2020_covid,
+    "2020_2023": load_eurusd_h1_2020_2023,
+    "2004_2024": load_eurusd_h1_2004_2024,
+}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--strategy", choices=["killzone", "2022"], default="2022")
+    parser.add_argument("--dataset", choices=list(DATASETS.keys()), default="covid_2020")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -66,11 +57,10 @@ def main() -> None:
     symbol = "EURUSD"
     event_queue: "queue.Queue" = queue.Queue()
 
-    real_data = load_real_eurusd_h1()
+    real_data = DATASETS[args.dataset]()
     logger = logging.getLogger(__name__)
     logger.info(
-        "Loaded %d real EUR/USD H1 bars: %s -> %s (source timezone assumed %s)",
-        len(real_data), real_data.index[0], real_data.index[-1], SOURCE_TIMEZONE_ASSUMPTION,
+        "Loaded %d real EUR/USD H1 bars (%s): %s -> %s", len(real_data), args.dataset, real_data.index[0], real_data.index[-1],
     )
 
     data_handler = HistoricCSVDataHandler(event_queue, {symbol: real_data})
