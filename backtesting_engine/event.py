@@ -80,6 +80,7 @@ class SignalEvent(Event):
         direction: SignalDirection,
         strength: float = 1.0,
         strategy_id: str = "default",
+        stop_loss_pips: Optional[float] = None,
         timestamp: Optional[float] = None,
     ) -> None:
         super().__init__(timestamp)
@@ -88,6 +89,10 @@ class SignalEvent(Event):
         self.direction = direction
         self.strength = strength
         self.strategy_id = strategy_id
+        # Optional: distance in pips between the signal's implied entry and
+        # its invalidation level. Lets a risk-based PositionSizer (e.g.
+        # ForexPositionSizer) size the resulting order; ignored otherwise.
+        self.stop_loss_pips = stop_loss_pips
 
     def __repr__(self) -> str:
         return f"SignalEvent(symbol={self.symbol}, direction={self.direction}, strength={self.strength:.2f})"

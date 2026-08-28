@@ -76,6 +76,8 @@ class ICTKillzoneStrategyTests(unittest.TestCase):
         self.assertFalse(event_queue.empty())
         signal = event_queue.get_nowait()
         self.assertEqual(signal.direction, SignalDirection.LONG)
+        # stop_loss_pips = |entry - invalidation_level(99.7)| / pip_value(0.0001)
+        self.assertAlmostEqual(signal.stop_loss_pips, abs(100.65 - 99.7) / 0.0001)
 
     def test_setup_invalidated_if_sweep_extreme_is_retaken(self) -> None:
         strategy, event_queue = self._make_strategy(swing_lookback=3, mss_confirmation_bars=5)

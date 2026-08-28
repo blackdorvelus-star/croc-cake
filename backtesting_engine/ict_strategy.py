@@ -92,11 +92,14 @@ class ICTKillzoneStrategy(Strategy):
         swing_lookback: int = 10,
         mss_confirmation_bars: int = 5,
         reference_timezone: Optional[str] = None,
+        pip_value: float = 0.0001,
     ) -> None:
         if swing_lookback < 2:
             raise ValueError("swing_lookback must be at least 2")
         if mss_confirmation_bars < 1:
             raise ValueError("mss_confirmation_bars must be at least 1")
+        if pip_value <= 0:
+            raise ValueError("pip_value must be positive")
 
         self.symbol_list = symbol_list
         self.event_queue = event_queue
@@ -104,6 +107,9 @@ class ICTKillzoneStrategy(Strategy):
         self.swing_lookback = swing_lookback
         self.mss_confirmation_bars = mss_confirmation_bars
         self.reference_timezone = reference_timezone
+        # Pip size for stop_loss_pips computation only (0.01 for JPY pairs,
+        # 0.0001 otherwise) -- sweep/MSS detection itself is price-agnostic.
+        self.pip_value = pip_value
 
         self._history: Dict[str, Deque[dict]] = {
             symbol: deque(maxlen=swing_lookback + 1) for symbol in symbol_list
@@ -166,12 +172,18 @@ class ICTKillzoneStrategy(Strategy):
             )
         return None
 
-    def _emit(self, symbol: str, direction: SignalDirection) -> None:
+    def _emit(self, symbol: str, direction: SignalDirection, stop_loss_pips: Optional[float] = None) -> None:
         if self._current_position[symbol] == direction:
             return
         self._current_position[symbol] = direction
         self.event_queue.put(
-            SignalEvent(symbol=symbol, direction=direction, strength=1.0, strategy_id="ict_killzone")
+            SignalEvent(
+                symbol=symbol,
+                direction=direction,
+                strength=1.0,
+                strategy_id="ict_killzone",
+                stop_loss_pips=stop_loss_pips,
+            )
         )
 
     def calculate_signals(self, event: MarketEvent) -> None:
@@ -204,7 +216,11 @@ class ICTKillzoneStrategy(Strategy):
                             if pending.direction == SweepDirection.BULLISH
                             else SignalDirection.SHORT
                         )
-                        self._emit(symbol, direction)
+                        # The sweep extreme is the natural ICT invalidation
+                        # level for this trade -- its distance from the
+                        # entry price doubles as the stop-loss in pips.
+                        stop_loss_pips = abs(bar["close"] - pending.invalidation_level) / self.pip_value
+                        self._emit(symbol, direction, stop_loss_pips=stop_loss_pips)
                     return
 
                 pending.bars_remaining -= 1
