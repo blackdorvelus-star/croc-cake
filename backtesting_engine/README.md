@@ -33,6 +33,7 @@ DataHandler --MarketEvent--> Portfolio.update_timeindex + RiskManager.evaluate_p
 | `data_handler.py` | Alimente la file en `MarketEvent`. `HistoricCSVDataHandler` rejoue des DataFrames pandas ; à remplacer par un flux live sans toucher au reste. |
 | `ml_model.py` | `DummyXGBoostSignalModel` : wrapper autour d'un `xgboost.XGBClassifier` (fallback pur Python si `xgboost` est absent), démonstratif uniquement. |
 | `strategy.py` | `MLMomentumStrategy` : construit des features glissantes et interroge le modèle ML **de façon asynchrone** (tous les N barres, une fois l'historique suffisant) pour émettre des `SignalEvent`. |
+| `ict_strategy.py` | `ICTKillzoneStrategy` : stratégie discrétionnaire "ICT" — ne trade que pendant des fenêtres horaires (`Killzone`), cherche un *liquidity sweep* (mèche au-delà d'un plus haut/bas récent puis clôture à l'intérieur), attend une confirmation de *market structure shift*, et sort en cas d'invalidation ou de fin de killzone. |
 | `portfolio.py` | Positions, cash, equity mark-to-market, sizing des ordres, ordres de liquidation totale. |
 | `risk_manager.py` | Middleware **entre** la création de l'`OrderEvent` et l'`ExecutionHandler`. Deux coupe-circuits : rate limiter (ordres/minute) et hard drawdown limit (2% depuis l'ouverture) qui émet un `LiquidateEvent`. |
 | `execution_handler.py` | `SlippageModel` (impact de marché en racine carrée du taux de participation, pas un chiffre fixe) + `CommissionModel` (pourcentage + minimum), puis génère le `FillEvent`. |
@@ -60,6 +61,20 @@ injecté) et fait tourner le pipeline complet de bout en bout. Il enchaîne
 ensuite avec une démonstration déterministe du coupe-circuit de drawdown du
 `RiskManager` (le déclenchement pendant le backtest ML dépend de la
 position — stochastique — tenue par le modèle factice au moment du choc).
+
+```bash
+python -m backtesting_engine.examples.run_ict_backtest
+```
+
+Fait tourner `ICTKillzoneStrategy` sur plusieurs jours de données 1-minute
+synthétiques, pour exercer chaque killzone (Asie, Londres, New York AM,
+London Close) plusieurs fois.
+
+> ⚠️ `ICTKillzoneStrategy` implémente une version **simplifiée** d'un
+> concept discrétionnaire (ICT) : détection de swing par fenêtre glissante
+> plutôt que par pivots fractals confirmés, et l'interprétation "smart
+> money" d'une mèche reste subjective. C'est une base solide et testable à
+> affiner, pas une stratégie validée ni un edge garanti.
 
 ## Tests
 

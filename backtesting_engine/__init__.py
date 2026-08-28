@@ -18,6 +18,7 @@ from .event import (
     SignalEvent,
 )
 from .execution_handler import CommissionModel, ExecutionHandler, SimulatedExecutionHandler, SlippageModel
+from .ict_strategy import DEFAULT_KILLZONES, ICTKillzoneStrategy, Killzone
 from .ml_model import DummyXGBoostSignalModel
 from .portfolio import Portfolio
 from .risk_manager import RiskManager
@@ -40,6 +41,9 @@ __all__ = [
     "HistoricCSVDataHandler",
     "MLMomentumStrategy",
     "Strategy",
+    "ICTKillzoneStrategy",
+    "Killzone",
+    "DEFAULT_KILLZONES",
     "DummyXGBoostSignalModel",
     "Portfolio",
     "RiskManager",
