@@ -174,6 +174,15 @@ def evaluate_strategy(
     baseline_pnls = [r.total_pnl for r in baseline_reports]
     avg_baseline_trades = statistics.mean(r.num_trades for r in baseline_reports)
 
+    if avg_baseline_trades < 0.8 * report.num_trades:
+        print(
+            f"  NOTE: calibration could not reach the target trade count even at "
+            f"p_entry={calibrated_p:.5f} (got ~{avg_baseline_trades:.1f} vs {report.num_trades} real trades). "
+            "RandomKillzoneEntryStrategy caps at one trade per killzone session while this "
+            "strategy can re-enter mid-session after an invalidation -- the comparison below "
+            "is against the baseline's achievable ceiling, not a trade-count-matched sample."
+        )
+
     beat_or_tied = sum(1 for pnl in baseline_pnls if pnl >= report.total_pnl)
     empirical_p_value = beat_or_tied / len(baseline_pnls)
 

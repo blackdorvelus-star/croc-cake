@@ -163,26 +163,57 @@ pour produire en moyenne le même nombre de trades que la stratégie réelle.
 Si le résultat réel se situe confortablement dans la distribution
 aléatoire, son "edge" n'est pas distinguable du bruit sur ces données.
 
-**Résultat obtenu sur `data/EURUSD_H1_2020.csv` :**
+**Résultat sur 20 ans de données réelles (`--dataset 2004_2024`, 126 442 barres H1, 2004-2024) :**
 
-| Stratégie | Trades | Win rate | Profit factor | PnL total | P(aléatoire ≥ réel) | Conclusion |
-|---|---|---|---|---|---|---|
-| `ICTKillzoneStrategy` | 13 | 30.8% | 0.44 | -2083.29 | 0.340 | non distinguable du hasard |
-| `ICT2022Strategy` | 1 | 0% | 0.00 | -205.72 | 0.870 | non distinguable du hasard (1 seul trade) |
+| Stratégie | Trades | Win rate | Profit factor | PnL total | avg R | Max DD | P(aléatoire ≥ réel) |
+|---|---|---|---|---|---|---|---|
+| `ICTKillzoneStrategy` | 190 | 43.2% | 0.93 | -2316.57 | -0.01 | 7.61% | 0.21 |
+| `ICT2022Strategy` | 4 | 25.0% | 0.15 | -4081.69 | -1.02 | 4.77% | 0.91 |
 
-Les deux stratégies perdent de l'argent sur cette période, **et** aucune
-des deux ne bat l'entrée aléatoire de façon statistiquement notable (34%
-et 87% des tirages aléatoires font aussi bien ou mieux). Le coupe-circuit
-de drawdown du `RiskManager` s'est déclenché sur `ICTKillzoneStrategy`.
-C'est la réponse honnête à "trouve la thèse qu'il te faut" : sur ces
-données (4 mois de H1, régime COVID atypique), **ni la mécanique ICT
-simple ni la version 2022 ne montrent un edge mesurable** — leur logique
-d'entrée ne fait pas mieux que le hasard une fois les coûts et le sizing
-par risque appliqués. Ne pas y voir une preuve que ICT ne fonctionne
-jamais : l'échantillon est bien trop petit (13 et 1 trades) pour trancher
-dans un sens ou dans l'autre — c'est un résultat inconclusif, pas un
-verdict négatif définitif. Il faudrait au minimum des années de données
-1-minute et plusieurs centaines de trades pour espérer une réponse fiable.
+Un `profit_factor < 1` suffit déjà à répondre, indépendamment de toute
+comparaison à l'aléatoire : **les deux stratégies perdent de l'argent en
+absolu sur 20 ans**, une fois les coûts réalistes appliqués. Le
+coupe-circuit de drawdown du `RiskManager` s'est déclenché dans les deux
+cas. Aucune des deux ne bat l'entrée aléatoire de façon statistiquement
+notable (21% et 91% des tirages aléatoires font aussi bien ou mieux).
+
+> ⚠️ **Limite méthodologique sur la comparaison Monte Carlo** :
+> `RandomKillzoneEntryStrategy` ne peut prendre qu'un trade par session de
+> killzone (elle ne ressort qu'à la fin de la fenêtre), alors que
+> `ICTKillzoneStrategy` peut ré-entrer dans la même session après une
+> invalidation. Résultat : la calibration a plafonné à ~47 trades/run en
+> moyenne (`p_entry≈0.998`, quasiment "entre à chaque occasion") sans
+> jamais atteindre les 190 trades réels — la comparaison n'est donc pas à
+> nombre de trades strictement égal pour cette stratégie. Pour
+> `ICT2022Strategy`, la cible était si petite (4 trades) que la
+> calibration à seulement 8 graines est bruitée (elle a convergé vers
+> ~22.8 trades/run). Le `profit_factor < 1` en absolu reste la conclusion
+> la plus solide des deux ; le p-value Monte Carlo est indicatif, pas une
+> preuve statistique propre, pour ces deux raisons.
+
+C'est la réponse honnête à "trouve la thèse qu'il te faut" : sur 20 ans de
+marché réel couvrant de nombreux régimes (2008, 2016 Brexit, 2020 COVID,
+2022 parité), **ni la mécanique ICT simple ni la version 2022 ne montrent
+un edge** — les deux perdent de l'argent, et rien n'indique que leur
+timing d'entrée fait mieux que le hasard. Ce n'est toujours pas une preuve
+que ICT ne fonctionne jamais dans l'absolu (une seule paire, un seul
+timeframe H1, une seule implémentation mécanique d'un concept
+discrétionnaire), mais l'échantillon n'est plus le facteur limitant :
+20 ans et 190 trades sont largement suffisants pour un verdict fiable sur
+*cette* implémentation, sur *cette* paire, à *cette* granularité.
+
+<details>
+<summary>Résultat sur l'ancien échantillon (4 mois de H1, crash COVID) — conservé par transparence</summary>
+
+| Stratégie | Trades | Win rate | Profit factor | PnL total | P(aléatoire ≥ réel) |
+|---|---|---|---|---|---|
+| `ICTKillzoneStrategy` | 13 | 30.8% | 0.44 | -2083.29 | 0.340 |
+| `ICT2022Strategy` | 1 | 0% | 0.00 | -205.72 | 0.870 |
+
+Déjà inconclusif faute de trades (13 et 1) — le résultat sur 20 ans
+ci-dessus est strictement plus fiable et le remplace comme réponse de
+référence.
+</details>
 
 ### Sizing par risque (Forex)
 

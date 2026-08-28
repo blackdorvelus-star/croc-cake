@@ -26,6 +26,14 @@ class RandomKillzoneEntryStrategy(Strategy):
     and flat, with a fixed stop distance; flattens once the killzone ends,
     exactly like `ICTKillzoneStrategy` -- the only difference is *when* to
     enter is decided by chance instead of a sweep/MSS/FVG signal.
+
+    Known asymmetry versus `ICTKillzoneStrategy`: this strategy takes at
+    most *one* trade per killzone session, since it only exits at the
+    session's end. `ICTKillzoneStrategy` has no such cap -- it can close
+    on invalidation and open a fresh setup within the same session -- so
+    its trade count can exceed whatever this baseline's entry probability
+    calibration can reach even at `entry_probability_per_bar` close to 1.
+    `run_thesis_validation.py` calls this out explicitly when it happens.
     """
 
     def __init__(
